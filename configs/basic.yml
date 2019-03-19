@@ -1,0 +1,11 @@
+# Dataset reader arguments
+dataset:
+  dummy: 0
+
+# Model related arguments
+model:
+  dummy: 0
+
+# Optimization related arguments
+solver:
+  num_epochs: 5
