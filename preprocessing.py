@@ -56,7 +56,6 @@ def main():
     makedirs(args.out_dir, exist_ok=True)
 
     audio_paths = [f for f in listdir(args.in_dir) if isfile(join(args.in_dir, f))]
-    print(audio_paths[:3])
 
     if args.method==valid_methods[0]:
         preprocess_mel(audio_paths, args)
