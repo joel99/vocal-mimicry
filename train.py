@@ -5,7 +5,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import yaml
 
-from utils import CheckpointManager, load_checkpoint
+from utils.checkpointing import CheckpointManager, load_checkpoint
+from dataset import SoundDataset
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -17,6 +19,10 @@ parser.add_argument_group("Arguments independent of experiment reproducibility")
 parser.add_argument(
     "--gpu-ids", nargs="+", type=int, default=0,
     help="List of ids of GPUs to use."
+)
+parser.add_argument(
+    "--cpu-workers", type=int, default=4,
+    help="Number of CPU workers for dataloader."
 )
 
 parser.add_argument_group("Checkpointing related arguments")
@@ -66,6 +72,11 @@ criterion = None
 optimizer = optim.Adam(model.parameters())
 scheduler = None
 
+dataset = SoundDataset(config["dataset"]["source_dir"])
+dataloader = DataLoader(
+    dataset, batch_size=config["solver"]["batch_size"], num_workers=args.cpu_workers
+)
+
 checkpoint_manager = CheckpointManager(model, optimizer, args.save_dirpath, config=config)
 
 # if loading from checkpoint, adjust start epoch and load parameters
@@ -85,9 +96,16 @@ else:
 # ================================================================================================
 #   TRAINING LOOP
 # ================================================================================================
-
+train_begin = datetime.now()
 for epoch in range(config["solver"]["num_epochs"]):
     # batch loop here
-    pass
+    for i, batch in enumerate(dataloader):
+        for key in batch:
+            batch[key] = batch[key].to(device)
+
+        optimizer.zero_grad()
+        # Optimization here
+        # TODO
     checkpoint_manager.step()
+    # Validation here, if done
 

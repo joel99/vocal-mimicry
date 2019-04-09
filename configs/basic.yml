@@ -1,6 +1,6 @@
 # Dataset reader arguments
 dataset:
-  dummy: 0
+  source_dir: 'data/if'
 
 # Model related arguments
 model:
@@ -8,4 +8,5 @@ model:
 
 # Optimization related arguments
 solver:
+  batch_size: 32
   num_epochs: 5

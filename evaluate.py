@@ -7,7 +7,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import yaml
 
-from utils import CheckpointManager, load_checkpoint
+from utils.checkpointing import CheckpointManager, load_checkpoint
+from dataset import SoundDataset
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -55,7 +57,11 @@ for arg in vars(args):
 #   SETUP DATASET, DATALOADER, MODEL
 # ================================================================================================
 
-dataloader = None
+dataset = SoundDataset(config["dataset"]["source_dir"])
+dataloader = DataLoader(
+    dataset, batch_size=config["solver"]["batch_size"], num_workers=args.cpu_workers
+)
+
 model = None
 if -1 not in args.gpu_ids:
     model = nn.DataParallel(model, args.gpu_ids)
