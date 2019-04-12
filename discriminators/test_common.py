@@ -1,9 +1,8 @@
 """
-Tests for all the functions I (anish) write: mostly just checks that
-all the dimensions work out as of now
+Testing for everything in common file, whoulda thunk?
 """
 
-from discriminator import *
+from common import *
 
 def test_convnet_from_arch():
     torch.set_default_tensor_type('torch.FloatTensor')
@@ -38,19 +37,3 @@ def test_fc_from_arch():
     output = layer(example_data)
     assert(output.size(0) == batch_size)
     assert(output.size(1) == output_dim)
-
-
-def test_voice_discriminator():
-
-    batch_size = 10
-    slice_dim = 50
-    num_timesteps = 200
-    conv_arch = [(7, 3, None), (13, 4, 2)]
-    hidden_list = [200, 500, 10, 300]
-
-    example_data = np.zeros((batch_size, slice_dim, num_timesteps))
-    example_data = torch.from_numpy(example_data).float()
-
-    discrim = Voice_Discriminator(conv_arch, hidden_list, slice_dim,)
-
-    discrim.forward(example_data)
