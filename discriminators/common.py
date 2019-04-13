@@ -73,10 +73,11 @@ def fc_from_arch(input_dim, output_dim, hidden_list):
     :output_dim: An integer
     :hidden_list: A list of integers
     """
-    layer_list = [input_dim] + hidden_list + [output_dim]
+    layer_list = [input_dim] + hidden_list
     layers = []
     for index in range(len(layer_list[1:])):
         layers.append(nn.Linear(layer_list[index], layer_list[index + 1]))
         layers.append(nn.ReLU())
 
+    layers.append(nn.Linear(layer_list[-1], output_dim))
     return nn.Sequential(*layers)
