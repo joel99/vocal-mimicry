@@ -81,3 +81,40 @@ def fc_from_arch(input_dim, output_dim, hidden_list):
 
     layers.append(nn.Linear(layer_list[-1], output_dim))
     return nn.Sequential(*layers)
+
+
+def train_discriminator(dtor, realspec_loader, fakespec_loader, num_epochs, lr=.0002):
+    """
+    Most of this code is stripped shamelelssly from
+    https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
+
+    But it's not quite the same, so I would really appreciate a sanity check
+    """
+
+    # TODO Make sure that this actually works...
+
+    real_label = 1
+    fake_label = 0
+
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.Adam(dtor.parameters(), lr=lr, betas=(beta1, 0.999))
+
+    for epoch in range(num_epochs):
+
+        dtor.zero_grad()
+
+        for index, real_data in enumerate(realspec_loader):
+            b_size = real_data.size(0)
+            labels = torch.full((b_size,), real_label,)
+            predictions = dtor(real_data).view(-1)
+            errD_real = criterion(predictions, labels)
+            errD_real.backward()
+
+        for index, fake_data in enumerate(fakespec_loader):
+            b_size = real_data.size(0)
+            labels = torch.full((b_size,), fake_label,)
+            predictions = dtor(fake_data).view(-1)
+            errD_fake = criterion(predictions, labels)
+            errD_fake.backward()
+
+        optimizer.step()
