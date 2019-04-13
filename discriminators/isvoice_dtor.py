@@ -40,7 +40,7 @@ def get_isvoice_discriminator(timestep_dimensionality, n_input_channels=1):
     Return a network which takes one voice sample and returns the log
     probability that said sample is actually a voice
 
-    This model takes in inputs of (N x C x H x W)
+    This model takes in inputs of (N x T x H)
     """
     conv_arch = [(7, 32, 2), (5, 64, None), (3, 128, None), (3, 256, 1)]
     return Isvoice_Discriminator(conv_arch=conv_arch,
@@ -50,7 +50,7 @@ def get_isvoice_discriminator(timestep_dimensionality, n_input_channels=1):
 
 class Isvoice_Discriminator(nn.Module):
 
-    def __init__(self, conv_arch, fc_arch, slice_size, n_input_channels=1,):
+    def __init__(self, conv_arch, fc_arch, slice_size,):
         '''
         Create components of a CNN classifier and initialize their weights.
 
@@ -63,25 +63,23 @@ class Isvoice_Discriminator(nn.Module):
         super(Isvoice_Discriminator, self).__init__()
 
         self.original_slice_size = slice_size
-        self.n_input_channels = n_input_channels
         self.conv_arch = conv_arch
 
         self.conv_layer, \
             self.size_after_conv = convnet_from_arch(self.original_slice_size,
-                                                     self.n_input_channels,
                                                      self.conv_arch)
 
         # The 1 being the single output it needs to give the log-prob of input
         # being a voice
-        self.fc_layer = fc_from_arch(self.size_after_conv*self.conv_arch[-1][0],
+        self.fc_layer = fc_from_arch(self.size_after_conv * self.conv_arch[-1][0],
                                      1, fc_arch)
 
-    def forward(self, input_):
+    def forward(self, input_, pool_func=torch.max):
         '''
         Run a set of inputs through the net to determine whether it is a voice
 
         Arguments:
-            images (Variable): A tensor of size (N, D, T) where
+            images (Variable): A tensor of size (N, T, D) where
                 N is the batch size
                 T is the number of timesteps
                 D is the dimenstionality of a timestep
@@ -98,8 +96,14 @@ class Isvoice_Discriminator(nn.Module):
         # too, instead of just the time dimension
 
         # TODO Maybe use average pooling instead of max pooling?
-        after_max, _ = torch.max(after_conv, 3)
+        after_max = pool_func(after_conv, dim=2)
+        if type(after_max) == tuple:
+            after_max = after_max[0]
         flattened = after_max.reshape(input_.size(0), -1)
+
+        print("original input size (n, t, d) was: ", input_.size())
+        print("The size after convolutional was: ", after_conv.size())
+        print("The size after maxing across a dim was: ", after_max.size())
 
         return torch.sigmoid(self.fc_layer(flattened))
 

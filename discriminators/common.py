@@ -3,9 +3,12 @@ This file provides utility methods, mostly concerning data formatting and
 functions to easily create neural nets
 """
 
+from __future__ import division
+
 import torch
 from torch import nn
 import numpy as np
+import math
 
 def reformat_data(data):
     """
@@ -29,7 +32,7 @@ def reformat_data(data):
     return data
 
 
-def convnet_from_arch(timestep_dimensionality, in_channels, arch):
+def convnet_from_arch(mel_size, arch):
     """
     The architecture is a list of tuples of the form
         (conv_n_kernels, conv_kernel_size, pool_size)
@@ -46,24 +49,89 @@ def convnet_from_arch(timestep_dimensionality, in_channels, arch):
         raise RuntimeError("Must have at least one convolutional layer")
 
     layers = []
-    curr_channel_size = in_channels
-    curr_dimensionality = timestep_dimensionality
 
-    for (conv_n_kernels, conv_kernel_size, pool_size) in arch:
-        # This padding ensures dimensionality is not reduced by the convolution
-        conv_padding = int((conv_kernel_size - 1) / 2)
+    # TODO If the function is ever changed to accept data with more than one
+    # channel then this hardcoded variable needs to be updated
+    curr_channel_size = 1
+    curr_mel_dim = mel_size
 
+    for (conv_n_kernels, conv_size, pool_size) in arch:
+
+        #############################
+        # Convolutional Layer Stuff #
+        #############################
+
+        # First, we ensure that the conv_size is formatted correctly
+        if type(conv_size) is tuple:
+            assert(len(conv_size) == 2)
+            assert(isinstance(conv_size[0], int))
+            assert(isinstance(conv_size[1], int))
+            t_conv_size, mel_conv_size = conv_size
+        elif type(conv_size) is int:
+            t_conv_size = conv_size
+            mel_conv_size = conv_size
+        else:
+            raise RuntimeError("Unrecognized type for conv kernel size: "
+                               + str(type(conv_size)))
+
+        # Second, we choose the padding so as not to reduce the dimensionality
+        # of the image via the convolution step
+        mel_conv_padding = math.ceil((mel_conv_size - 1) / 2)
+        t_conv_padding = math.ceil((t_conv_size - 1) / 2)
+        conv_padding = (t_conv_padding, mel_conv_padding)
+
+        # Finally, we actually add in the layer
         layers.append(nn.Conv2d(curr_channel_size,
                                 conv_n_kernels,
-                                conv_padding).float())
+                                kernel_size=conv_size,
+                                padding=conv_padding).float())
         layers.append(nn.ReLU())
         curr_channel_size = conv_n_kernels
 
-        if pool_size is not None:
-            curr_dimensionality = int(curr_dimensionality / pool_size)
-            layers.append(nn.MaxPool2d(pool_size))
+        new_mel_dim = math.ceil((curr_mel_dim + 2*mel_conv_padding
+                                 - (mel_conv_size - 1) - 1) + 1)
+        assert((new_mel_dim - curr_mel_dim)**2 <= 1)
+        curr_mel_dim = new_mel_dim
 
-    return nn.Sequential(*layers), curr_dimensionality
+        #######################
+        # Pooling layer logic #
+        #######################
+
+        # Similarly to above, we ensure that the pooling spec is formatted
+        # correctly
+
+        if pool_size is None:
+            continue
+        elif type(pool_size) is tuple:
+            assert(len(pool_size) == 2)
+            assert(type(pool_size[0]) == int)
+            assert(type(pool_size[1]) == int)
+            t_pool_size, mel_pool_size = pool_size
+        elif type(pool_size) is int:
+            if pool_size <= 0:
+                raise RuntimeError("Pool size must be positive")
+            t_pool_size = pool_size
+            mel_pool_size = pool_size
+        else:
+            raise RuntimeError("Unrecognized type for pool kernel size: "
+                               + str(type(pool_size)))
+
+        # If mel_pool_size is within one of mel_dim, set it to mel_dim
+        # But if it's too big, then we have issues
+        if mel_pool_size > curr_mel_dim + 1:
+            raise RuntimeError("Off by greater than one, probably should "
+                               + "make sure that clipping is correct here")
+        elif (abs(mel_pool_size - curr_mel_dim) <= 1) \
+             or (mel_pool_size == -1):
+            mel_pool_size = curr_mel_dim
+
+        pool_padding = 0
+        layers.append(nn.MaxPool2d((t_pool_size, mel_pool_size)))
+
+        curr_mel_dim = math.floor((curr_mel_dim + 2*pool_padding
+                                   - (mel_pool_size - 1) - 1)/mel_pool_size+1)
+
+    return nn.Sequential(*layers), curr_mel_dim
 
 def fc_from_arch(input_dim, output_dim, hidden_list):
     """

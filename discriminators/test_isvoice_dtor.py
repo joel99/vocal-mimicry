@@ -13,7 +13,9 @@ def test_voice_discriminator():
     conv_arch = [(7, 3, None), (13, 4, 2)]
     hidden_list = [200, 500, 10, 300]
 
-    example_data = np.zeros((batch_size, slice_dim, num_timesteps))
+    # The Isvoice_Discriminator automatically adds the channel dimension
+    # for its data, which is why we don't need to include it explicitly
+    example_data = np.zeros((batch_size, num_timesteps, slice_dim))
     example_data = torch.from_numpy(example_data).float()
 
     discrim = Isvoice_Discriminator(conv_arch, hidden_list, slice_dim,)
