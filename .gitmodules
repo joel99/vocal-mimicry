@@ -1,0 +1,3 @@
+[submodule "embedding"]
+	path = embedding
+	url = https://github.com/lealex262/DeepSpeaker-pytorch.git
