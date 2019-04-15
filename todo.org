@@ -1,0 +1,30 @@
+* To discuss
+*** TODO [#B] How to implement all combos of (real/generated) and
+    (positive/negative) samples for the dtor dataset classes
+**** Assigned to: Anish
+      Like I said my understanding of GANs comes from the original paper which
+      I don't think really addresses this, so I feel like I might be missing
+      some of the picture here. What I have now should be at least somewhat
+      adequate though
+*** TODO [#B] Talk about the content discriminator
+    I'm not convinced that the content discriminator is gonna work: I had to
+    come up with the arch myself, as I couldn't find anything for this online
+    I think we might be better off enforcing content similarity by using a
+    resnet connection across the generator :( -Anish
+
+** Training
+*** TODO Write the training loop :(
+*** TODO [#A] Write dataloaders for the discriminator classes?
+**** Assinged to: Anish
+    I don't think there's actually much to do here, the main annoyance is just
+    that the data for content/identity can be variable-length so I can't
+    actually pass arround batches as tensors (so each "batch" probably has to
+    consist of a single example? Not sure how that interacts with SGD though)
+*** TODO [#A] Write code to train the generators
+*** TODO [#A] Validate the train_discriminator code in
+    discriminators/common.py
+**** Assigned to: Can't be Anish
+     I found the basic structure online: would appreciate a review, since
+     this is an absolutely critical function...
+     At the very least, the function probably needs to be refactored a bit
+     to allow for how we're calling it from the general training loop
