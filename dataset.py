@@ -90,6 +90,9 @@ class VCTK_Wrapper:
         self.num_people = num_people
 
     def mel_from_ids(self, person_id, sample_id):
+
+        # TODO [Joel] Does this implementation look alright?
+
         assert(person_id <= self.num_people)
         assert(sample_id <= self.num_samples)
 
