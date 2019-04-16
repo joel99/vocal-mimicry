@@ -12,7 +12,6 @@ makes a good dimensionality reduction for voices such that they can be
 compared, we came to the conclusion that it makes sense to use the style
 embeddings themselves as the dimensionality-reduced data
 
-(TODO Decide on an option)
 The forward() function provides the probability that the two voices
 are the same. I support different ways to calculate this probability, being
 
@@ -42,17 +41,23 @@ def get_identity_discriminator(style_size):
 
     See documentation of forward() below for information on input size
     """
-    return Identity_Discriminator(style_size, mode='norm',)
+    return Identity_Discriminator(
+        style_size,
+        mode='norm',
+    )
 
 
 class Identity_Discriminator(nn.Module):
 
     modes = ['norm', 'cos', 'nn']
 
-    def __init__(self, style_size,
-                 mode='norm',
-                 fc_hidden_arch=None,
-                 cossim_degree=None,):
+    def __init__(
+            self,
+            style_size,
+            mode='norm',
+            fc_hidden_arch=None,
+            cossim_degree=None,
+    ):
         """
         :style_size: An integer, the size of the style embedding vector
         :distance_mode: One of 'norm', 'nn', 'cos'
@@ -89,21 +94,25 @@ class Identity_Discriminator(nn.Module):
 
     def forward(self, input_):
         """
-        :input_: should be a (2 x N x style_size) tensor
+        :input_: should be a (N x 2 x style_size) tensor
 
         Returns a vector of shape (N,), with each entry being the probability
         that the two voices at entry n were THE SAME PERSON
         """
-        i1, i2 = input_[0], input_[1]
+        assert (len(input_.size()) == 3)
+        assert (input_.size(1) == 2)
+
+        i1, i2 = input_[:, 0, :], input_[:, 1, :]
 
         if self.mode == 'norm':
-            return 1 - ((2 / math.pi) * torch.atan(torch.norm(i1 - i2,
-                                                              p=2, dim=1)))
+            return 1 - (
+                (2 / math.pi) * torch.atan(torch.norm(i1 - i2, p=2, dim=1)))
         elif self.mode == 'cos':
-            return ((nn.functional.cosine_similarity(i1, i2, dim=1) + 1)/2)**self.cossim_degree
+            return ((nn.functional.cosine_similarity(i1, i2, dim=1) + 1) /
+                    2)**self.cossim_degree
         elif self.mode == 'nn':
-            return torch.sigmoid(self.network.forward(torch.cat((i1, i2),
-                                                                dim=1)))
+            return torch.sigmoid(
+                self.network.forward(torch.cat((i1, i2), dim=1)))
 
 
 if __name__ == "__main__":

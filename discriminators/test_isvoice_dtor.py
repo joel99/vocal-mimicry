@@ -2,8 +2,10 @@
 Tests for everything in the identity_dtor file, whoulda thunk?
 """
 
-from common import *
 from isvoice_dtor import Isvoice_Discriminator
+import numpy as np
+import torch
+
 
 def test_voice_discriminator():
 
@@ -18,6 +20,10 @@ def test_voice_discriminator():
     example_data = np.zeros((batch_size, num_timesteps, slice_dim))
     example_data = torch.from_numpy(example_data).float()
 
-    discrim = Isvoice_Discriminator(conv_arch, hidden_list, slice_dim,)
+    discrim = Isvoice_Discriminator(
+        conv_arch,
+        hidden_list,
+        slice_dim,
+    )
 
     discrim.forward(example_data)

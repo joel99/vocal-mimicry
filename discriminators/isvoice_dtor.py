@@ -2,8 +2,8 @@
 Architecture
 ===================================================================
 
-The architecture/parameters of the current architecture are pulled mostly from (1)
-[page 3]. There are two key differences however.
+The architecture/parameters of the current architecture are pulled mostly from
+(1) [page 3]. There are two key differences however.
 
     1. Said architecture is applied to speaker classification (which speaker is
        this) rather than isvoice discrimination (Is this a voice?). I have
@@ -14,7 +14,7 @@ The architecture/parameters of the current architecture are pulled mostly from (
     2. In (1), the given architecture was applied with fixed-time data. Since
        our data is possibly time-variable, I must implement some sort of global
        pooling across time to fix dimensionality for the fully connected
-       layers. Currently, (TODO) I am using Max Pooling. However, (4, page 4)
+       layers. Currently, I am using Max Pooling. However, (4, page 4)
        indicates that average pooling is also an option (though their use ase
        is slightly different). My gut says that max pooling is more justified,
        but we can test different things
@@ -30,7 +30,6 @@ The architecture/parameters of the current architecture are pulled mostly from (
 
 import torch
 from torch import nn
-import numpy as np
 
 from common import fc_from_arch, convnet_from_arch
 
@@ -40,7 +39,7 @@ def get_isvoice_discriminator(timestep_dimensionality, n_input_channels=1):
     Return a network which takes one voice sample and returns the log
     probability that said sample is actually a voice
 
-    This model takes in inputs of (N x T x H)
+    This model takes in inputs of (1 x T x M)
     """
     conv_arch = [(7, 32, 2), (5, 64, None), (3, 128, None), (3, 256, 1)]
     return Isvoice_Discriminator(conv_arch=conv_arch,
@@ -49,8 +48,12 @@ def get_isvoice_discriminator(timestep_dimensionality, n_input_channels=1):
 
 
 class Isvoice_Discriminator(nn.Module):
-
-    def __init__(self, conv_arch, fc_arch, slice_size,):
+    def __init__(
+            self,
+            conv_arch,
+            fc_arch,
+            slice_size,
+    ):
         '''
         Create components of a CNN classifier and initialize their weights.
 
@@ -71,39 +74,32 @@ class Isvoice_Discriminator(nn.Module):
 
         # The 1 being the single output it needs to give the log-prob of input
         # being a voice
-        self.fc_layer = fc_from_arch(self.size_after_conv * self.conv_arch[-1][0],
-                                     1, fc_arch)
+        self.fc_layer = fc_from_arch(
+            self.size_after_conv * self.conv_arch[-1][0], 1, fc_arch)
 
     def forward(self, input_, pool_func=torch.max):
         '''
         Run a set of inputs through the net to determine whether it is a voice
 
         Arguments:
-            images (Variable): A tensor of size (N, T, D) where
+            images (Variable): A tensor of size (1, T, M) where
                 N is the batch size
                 T is the number of timesteps
                 D is the dimenstionality of a timestep
         Returns:
-            A torch Variable of size (N,) specifying the score
-            for each example.
+            A torch Tensor of size (1,) specifying the score for the given
+            example
         '''
-        if len(input_.size()) != 3:
-            raise RuntimeError("Something's messed up with the dimensions!")
+        assert (len(input_.size()) == 3)
+        assert (input_.size(0) == 1)
+
         extended_input = input_[:, None, :]
         after_conv = self.conv_layer.forward(extended_input)
 
-        # TODO It's possible that it's good to max across the pitch dimension
-        # too, instead of just the time dimension
-
-        # TODO Maybe use average pooling instead of max pooling?
         after_max = pool_func(after_conv, dim=2)
         if type(after_max) == tuple:
             after_max = after_max[0]
         flattened = after_max.reshape(input_.size(0), -1)
-
-        print("original input size (n, t, d) was: ", input_.size())
-        print("The size after convolutional was: ", after_conv.size())
-        print("The size after maxing across a dim was: ", after_max.size())
 
         return torch.sigmoid(self.fc_layer(flattened))
 

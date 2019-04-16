@@ -5,10 +5,10 @@ functions to easily create neural nets
 
 from __future__ import division
 
-import torch
 from torch import nn
-import numpy as np
 import math
+import numpy as np
+import torch
 
 
 def reformat_data(data):
@@ -44,7 +44,8 @@ def convnet_from_arch(mel_size, arch):
     return: Tuple (layer, outsize) where
 
     layer: The actual nn.sequential object for use elsewhere in code outsize:
-    The size of the dimensionality axis, after all convolutions are carried out
+    The size of the dimensionality axis, after all convolutions are carried
+    out
     """
     if len(arch) < 1:
         raise RuntimeError("Must have at least one convolutional layer")
@@ -64,16 +65,16 @@ def convnet_from_arch(mel_size, arch):
 
         # First, we ensure that the conv_size is formatted correctly
         if type(conv_size) is tuple:
-            assert(len(conv_size) == 2)
-            assert(isinstance(conv_size[0], int))
-            assert(isinstance(conv_size[1], int))
+            assert (len(conv_size) == 2)
+            assert (isinstance(conv_size[0], int))
+            assert (isinstance(conv_size[1], int))
             t_conv_size, mel_conv_size = conv_size
         elif type(conv_size) is int:
             t_conv_size = conv_size
             mel_conv_size = conv_size
         else:
-            raise RuntimeError("Unrecognized type for conv kernel size: "
-                               + str(type(conv_size)))
+            raise RuntimeError("Unrecognized type for conv kernel size: " +
+                               str(type(conv_size)))
 
         # Second, we choose the padding so as not to reduce the dimensionality
         # of the image via the convolution step
@@ -82,16 +83,17 @@ def convnet_from_arch(mel_size, arch):
         conv_padding = (t_conv_padding, mel_conv_padding)
 
         # Finally, we actually add in the layer
-        layers.append(nn.Conv2d(curr_channel_size,
-                                conv_n_kernels,
-                                kernel_size=conv_size,
-                                padding=conv_padding).float())
+        layers.append(
+            nn.Conv2d(curr_channel_size,
+                      conv_n_kernels,
+                      kernel_size=conv_size,
+                      padding=conv_padding).float())
         layers.append(nn.ReLU())
         curr_channel_size = conv_n_kernels
 
-        new_mel_dim = math.ceil((curr_mel_dim + 2*mel_conv_padding
-                                 - (mel_conv_size - 1) - 1) + 1)
-        assert((new_mel_dim - curr_mel_dim)**2 <= 1)
+        new_mel_dim = math.ceil((curr_mel_dim + 2 * mel_conv_padding -
+                                 (mel_conv_size - 1) - 1) + 1)
+        assert ((new_mel_dim - curr_mel_dim)**2 <= 1)
         curr_mel_dim = new_mel_dim
 
         #######################
@@ -104,9 +106,9 @@ def convnet_from_arch(mel_size, arch):
         if pool_size is None:
             continue
         elif type(pool_size) is tuple:
-            assert(len(pool_size) == 2)
-            assert(type(pool_size[0]) == int)
-            assert(type(pool_size[1]) == int)
+            assert (len(pool_size) == 2)
+            assert (type(pool_size[0]) == int)
+            assert (type(pool_size[1]) == int)
             t_pool_size, mel_pool_size = pool_size
         elif type(pool_size) is int:
             if pool_size <= 0:
@@ -114,14 +116,14 @@ def convnet_from_arch(mel_size, arch):
             t_pool_size = pool_size
             mel_pool_size = pool_size
         else:
-            raise RuntimeError("Unrecognized type for pool kernel size: "
-                               + str(type(pool_size)))
+            raise RuntimeError("Unrecognized type for pool kernel size: " +
+                               str(type(pool_size)))
 
         # If mel_pool_size is within one of mel_dim, set it to mel_dim
         # But if it's too big, then we have issues
         if mel_pool_size > curr_mel_dim + 1:
-            raise RuntimeError("Off by greater than one, probably should "
-                               + "make sure that clipping is correct here")
+            raise RuntimeError("Off by greater than one, probably should " +
+                               "make sure that clipping is correct here")
         elif (abs(mel_pool_size - curr_mel_dim) <= 1) \
              or (mel_pool_size == -1):
             mel_pool_size = curr_mel_dim
@@ -129,10 +131,12 @@ def convnet_from_arch(mel_size, arch):
         pool_padding = 0
         layers.append(nn.MaxPool2d((t_pool_size, mel_pool_size)))
 
-        curr_mel_dim = math.floor((curr_mel_dim + 2*pool_padding
-                                   - (mel_pool_size - 1) - 1)/mel_pool_size+1)
+        curr_mel_dim = math.floor((curr_mel_dim + 2 * pool_padding -
+                                   (mel_pool_size - 1) - 1) / mel_pool_size +
+                                  1)
 
     return nn.Sequential(*layers), curr_mel_dim
+
 
 def fc_from_arch(input_dim, output_dim, hidden_list):
     """
@@ -153,9 +157,7 @@ def fc_from_arch(input_dim, output_dim, hidden_list):
     return nn.Sequential(*layers)
 
 
-def train_dtor(dtor, optimizer,
-               real_loader, fake_loader,
-               num_batches):
+def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
     """
     Most of this code is stripped shamelelssly from
     https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
@@ -190,8 +192,8 @@ def train_dtor(dtor, optimizer,
     elif isinstance(num_batches, tuple):
         num_real_batches, num_fake_batches = num_batches
     else:
-        raise TypeError("Invalid type for num_batches: "
-                        + str(type(num_batches)))
+        raise TypeError("Invalid type for num_batches: " +
+                        str(type(num_batches)))
 
     for batch_index in range(len(max(num_real_batches, num_fake_batches))):
 
@@ -205,7 +207,10 @@ def train_dtor(dtor, optimizer,
 
                 data = iter(loader).next()
                 data_size = data.size(0)
-                labels = torch.full((data_size,), actual_label,)
+                labels = torch.full(
+                    (data_size, ),
+                    actual_label,
+                )
                 predictions = dtor(data).view(-1)
                 err = criterion(predictions, labels)
                 err.backward()

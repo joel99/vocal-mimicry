@@ -6,14 +6,15 @@ import numpy as np
 
 from functools import reduce
 
+
 class SoundDataset(Dataset):
-    def __init__(self,
-                 source_dir
-                ):
+    def __init__(self, source_dir):
         super().__init__()
         # TODO - installation script on nonexistent or empty source
         self.source_dir = source_dir
-        self.filenames = listdir(source_dir) # Note this is deterministic, but unintuitive (sort todo?)
+        self.filenames = listdir(
+            source_dir
+        )  # Note this is deterministic, but unintuitive (sort todo?)
 
     def __len__(self):
         return len(self.filenames)
@@ -25,6 +26,7 @@ class SoundDataset(Dataset):
 
 ######################################################################
 
+
 def coords_from_index(index, dimensions):
     prods = [None] * len(dimensions)
     p = 1
@@ -32,7 +34,7 @@ def coords_from_index(index, dimensions):
         p = p * dim
         prods[len(dimensions) - dim_index - 1] = p
 
-    assert(index < prods[0])
+    assert (index < prods[0])
 
     i = index
     coords = [None] * len(dimensions)
@@ -84,8 +86,8 @@ class VCTK_Wrapper:
 
     def __init__(self, num_people, num_samples):
 
-        assert(num_people <= self.MAX_NUM_PEOPLE)
-        assert(num_samples <= self.MAX_NUM_SAMPLES)
+        assert (num_people <= self.MAX_NUM_PEOPLE)
+        assert (num_samples <= self.MAX_NUM_SAMPLES)
         self.num_samples = num_samples
         self.num_people = num_people
 
@@ -93,25 +95,22 @@ class VCTK_Wrapper:
 
         # TODO [Joel] Does this implementation look alright?
 
-        assert(person_id <= self.num_people)
-        assert(sample_id <= self.num_samples)
+        assert (person_id <= self.num_people)
+        assert (sample_id <= self.num_samples)
 
         actual_id = self.STARTING_ID + person_id
-        np_mel = np.load(self.VCTK_MEL_ROOT
-                         + "/p" + str(actual_id)
-                         + "/p" + str(actual_id)
-                         + "_" + "{:03d}".format(sample_id)
-                         + ".npy")
+        np_mel = np.load(self.VCTK_MEL_ROOT + "/p" + str(actual_id) + "/p" +
+                         str(actual_id) + "_" + "{:03d}".format(sample_id) +
+                         ".npy")
         return torch.tensor(np_mel)
 
 
 class ParalellAudioDataset(Dataset):
-
     def __init__(self, wrapper, dims):
         super().__init__()
         self.wrapper = wrapper
         self.dims = dims
-        self.length = reduce(lambda x, y: x*y, self.dims, 1)
+        self.length = reduce(lambda x, y: x * y, self.dims, 1)
 
     def __len__(self):
         return self.length
@@ -125,7 +124,10 @@ class Isvoice_Dataset_Real(ParalellAudioDataset):
     label
     """
 
-    def __init__(self, wrapper,):
+    def __init__(
+            self,
+            wrapper,
+    ):
         dims = (wrapper.num_people, wrapper.num_samples)
         super().__init__(self, dims)
 
@@ -140,13 +142,15 @@ class Isvoice_Dataset_Fake(ParalellAudioDataset):
     examples
     """
 
-    def __init__(self, wrapper,):
+    def __init__(
+            self,
+            wrapper,
+    ):
         """
         There are (people * samples) original "real" files, and (people)
         possible transformations of each of files.
         """
-        dims = (wrapper.num_people, wrapper.num_people,
-                wrapper.num_samples)
+        dims = (wrapper.num_people, wrapper.num_people, wrapper.num_samples)
         super().__init__(self, dims)
 
     def __getitem__(self, index):
@@ -177,7 +181,10 @@ class Identity_Dataset_Real(ParalellAudioDataset):
     transformed voices? I could be really wrong on this though.
     """
 
-    def __init__(self, wrapper,):
+    def __init__(
+            self,
+            wrapper,
+    ):
         """
         There are (people * samples) original "real" files, and (people)
         possible transformations of each of files.
@@ -199,15 +206,19 @@ class Identity_Dataset_Real(ParalellAudioDataset):
 
 
 class Identity_Dataset_Fake(ParalellAudioDataset):
-
-    def __init__(self, wrapper,):
+    def __init__(
+            self,
+            wrapper,
+    ):
         """
         There are (people * samples) original "real" files, and (people)
         possible transformations of each of files.
         """
-        dims = (wrapper.num_people,
-                wrapper.num_samples,
-                wrapper.num_people - 1,)
+        dims = (
+            wrapper.num_people,
+            wrapper.num_samples,
+            wrapper.num_people - 1,
+        )
         super().__init__(self, dims)
 
     def __getitem__(self, index):
@@ -232,7 +243,11 @@ class Content_Dataset_Real(ParalellAudioDataset):
 
     Is this OK? I feel like it's not
     """
-    def __init__(self, wrapper,):
+
+    def __init__(
+            self,
+            wrapper,
+    ):
         dims = (wrapper.num_samples, wrapper.num_people, wrapper.num_people)
         super().__init__(self, dims)
 
@@ -254,9 +269,13 @@ class Content_Dataset_Fake(ParalellAudioDataset):
     """
     TODO See todo item for Content_Dataset_Real
     """
-    def __init__(self, wrapper,):
-        dims = (wrapper.num_people, wrapper.num_samples,
-                wrapper.num_people, wrapper.num_samples - 1)
+
+    def __init__(
+            self,
+            wrapper,
+    ):
+        dims = (wrapper.num_people, wrapper.num_samples, wrapper.num_people,
+                wrapper.num_samples - 1)
         super().__init__(self, dims)
 
     def __getitem__(self, index):

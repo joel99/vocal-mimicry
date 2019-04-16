@@ -1,4 +1,4 @@
-* To discuss
+* To discuss as group
 *** TODO [#B] How to implement all combos of (real/generated) and
     (positive/negative) samples for the dtor dataset classes
 **** Assigned to: Anish
@@ -12,19 +12,26 @@
     I think we might be better off enforcing content similarity by using a
     resnet connection across the generator :( -Anish
 
-** Training
-*** TODO Write the training loop :(
+* Other todo stuff
+*** TODO [#A] Write generator trainer (ie whole training loop)
 *** TODO [#A] Write dataloaders for the discriminator classes?
-**** Assinged to: Anish
+**** Assigned to: Anish
     I don't think there's actually much to do here, the main annoyance is just
     that the data for content/identity can be variable-length so I can't
     actually pass arround batches as tensors (so each "batch" probably has to
     consist of a single example? Not sure how that interacts with SGD though)
-*** TODO [#A] Write code to train the generators
 *** TODO [#A] Validate the train_discriminator code in
     discriminators/common.py
 **** Assigned to: Can't be Anish
      I found the basic structure online: would appreciate a review, since
      this is an absolutely critical function...
-     At the very least, the function probably needs to be refactored a bit
-     to allow for how we're calling it from the general training loop
+*** TODO [#B] Make Dataset classes, train_dtor handle data labels?
+**** Assigned to: Anish
+     Depends on the outcome of the discussion on "how to implement all combos"
+
+* Simple stuff
+*** TODO In isvoice_dtor decide on max vs average pooling
+*** TODO In isvoice_dtor should I return scalar instead of 1d tensor?
+*** TODO Decide on actual hyperparameters in the various
+    get_discriminator functions
+*** TODO Decide on which identity_dtor mode to use
