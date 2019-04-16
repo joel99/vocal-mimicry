@@ -100,7 +100,8 @@ class VCTK_Wrapper:
         np_mel = np.load(self.VCTK_MEL_ROOT
                          + "/p" + str(actual_id)
                          + "/p" + str(actual_id)
-                         + "_" + "{:03d}".format(sample_id))
+                         + "_" + "{:03d}".format(sample_id)
+                         + ".npy")
         return torch.tensor(np_mel)
 
 
