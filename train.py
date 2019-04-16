@@ -14,14 +14,6 @@ from dataset import VCTK_Wrapper, \
     Isvoice_Dataset_Real, Isvoice_Dataset_Fake, \
     Identity_Dataset_Real, Identity_Dataset_Fake
 
-def get_transformer():
-    # [Arda] Implement pls
-    raise NotImplementedError()
-
-def get_stylenet():
-    # [Alex] Implement pls
-    raise NotImplementedError()
-
 @click.command()
 @click.option('--verbose', default=0,)
 @click.option('--cpu-workers', type=int, default=4,
