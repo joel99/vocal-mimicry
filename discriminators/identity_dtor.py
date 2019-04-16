@@ -92,17 +92,15 @@ class Identity_Discriminator(nn.Module):
         else:
             self.network = fc_from_arch(2 * style_size, 1, self.fc_hidden_arch)
 
-    def forward(self, input_):
+    def forward(self, i1, i2):
         """
-        :input_: should be a (N x 2 x style_size) tensor
+        :i1: should be a (N x S) tensor
+        :i2: should be a (N x S) tensor
 
         Returns a vector of shape (N,), with each entry being the probability
-        that the two voices at entry n were THE SAME PERSON
+        that i1[n] and i2[n] were stylevectors for the same person
         """
-        assert (len(input_.size()) == 3)
-        assert (input_.size(1) == 2)
-
-        i1, i2 = input_[:, 0, :], input_[:, 1, :]
+        assert (i1.size() == i2.size())
 
         if self.mode == 'norm':
             return 1 - (

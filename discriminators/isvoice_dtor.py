@@ -34,7 +34,7 @@ from torch import nn
 from common import fc_from_arch, convnet_from_arch
 
 
-def get_isvoice_discriminator(timestep_dimensionality, n_input_channels=1):
+def get_isvoice_discriminator(mel_channels,):
     """
     Return a network which takes one voice sample and returns the log
     probability that said sample is actually a voice
@@ -44,7 +44,7 @@ def get_isvoice_discriminator(timestep_dimensionality, n_input_channels=1):
     conv_arch = [(7, 32, 2), (5, 64, None), (3, 128, None), (3, 256, 1)]
     return Isvoice_Discriminator(conv_arch=conv_arch,
                                  fc_arch=[1024, 256, 1024],
-                                 slice_size=timestep_dimensionality)
+                                 slice_size=mel_channels)
 
 
 class Isvoice_Discriminator(nn.Module):

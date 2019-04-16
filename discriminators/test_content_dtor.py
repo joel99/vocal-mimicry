@@ -29,11 +29,11 @@ def num_timesteps():
 
 @pytest.fixture
 def example_data(num_timesteps, mel_size):
-    return torch.from_numpy(np.zeros((1, 2, num_timesteps, mel_size))).float()
+    return torch.from_numpy(np.zeros((1, num_timesteps, mel_size))).float()
 
 
-def test_content_discriminator1(mel_size, time_res, fc_hidden_list,
+def test_content_discriminator(mel_size, time_res, fc_hidden_list,
                                 example_data):
 
     discrim = get_content_discriminator(mel_size)
-    discrim.forward(example_data)
+    discrim(example_data, example_data)

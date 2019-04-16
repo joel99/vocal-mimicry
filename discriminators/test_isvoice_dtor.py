@@ -9,7 +9,7 @@ import torch
 
 def test_voice_discriminator():
 
-    batch_size = 10
+    batch_size = 1
     slice_dim = 50
     num_timesteps = 200
     conv_arch = [(7, 3, None), (13, 4, 2)]
@@ -26,4 +26,4 @@ def test_voice_discriminator():
         slice_dim,
     )
 
-    discrim.forward(example_data)
+    discrim(example_data)

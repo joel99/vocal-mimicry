@@ -24,7 +24,7 @@ def style_size():
 
 @pytest.fixture
 def ones_data(batch_size, style_size):
-    data = np.ones((batch_size, 2, style_size))
+    data = np.ones((batch_size, style_size))
     data = torch.from_numpy(data).float()
     return data
 
@@ -34,7 +34,7 @@ def test_siamese_voice_discriminator(style_size, fc_hidden_dims, ones_data):
     siamese_discrim = Identity_Discriminator(style_size,
                                              mode='nn',
                                              fc_hidden_arch=fc_hidden_dims)
-    siamese_discrim.forward(ones_data)
+    siamese_discrim(ones_data, ones_data)
 
 
 def test_cos_voice_discriminator(style_size, ones_data):
@@ -42,13 +42,13 @@ def test_cos_voice_discriminator(style_size, ones_data):
     cosine_discrim = Identity_Discriminator(style_size,
                                             mode='cos',
                                             cossim_degree=3)
-    p = cosine_discrim.forward(ones_data)
+    p = cosine_discrim(ones_data, ones_data)
     assert (p[0] == 1)
 
 
 def test_norm_voice_discriminator(style_size, ones_data):
 
     norm_discrim = Identity_Discriminator(style_size, mode='norm')
-    p = norm_discrim.forward(ones_data)
+    p = norm_discrim(ones_data, ones_data)
 
     assert (p[0] == 1)
