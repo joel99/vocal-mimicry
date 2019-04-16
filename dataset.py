@@ -133,7 +133,7 @@ class Isvoice_Dataset_Real(ParalellAudioDataset):
 
     def __getitem__(self, index):
         person_id, sample_id = coords_from_index(index, self.dims)
-        return self.wrapper.mel_from_ids(person_id, sample_id)
+        return self.wrapper.mel_from_ids(person_id, sample_id), 1
 
 
 class Isvoice_Dataset_Fake(ParalellAudioDataset):
@@ -165,7 +165,7 @@ class Isvoice_Dataset_Fake(ParalellAudioDataset):
 
         stylevec = stylevec_from_person(style_pid)
         fake_sample = generate_voice(source_audio, stylevec)
-        return fake_sample
+        return fake_sample, 0
 
 
 class Identity_Dataset_Real(ParalellAudioDataset):
@@ -202,7 +202,7 @@ class Identity_Dataset_Real(ParalellAudioDataset):
         s1_stylevec = stylevec_from_mel(a1_mel)
         s2_stylevec = stylevec_from_mel(a2_mel)
 
-        return torch.from_numpy(np.array([s1_stylevec, s2_stylevec]))
+        return torch.from_numpy(np.array([s1_stylevec, s2_stylevec])), 1
 
 
 class Identity_Dataset_Fake(ParalellAudioDataset):
@@ -232,7 +232,7 @@ class Identity_Dataset_Fake(ParalellAudioDataset):
         transformed_mel = generate_voice(source_mel, stylevec)
         transformed_stylevec = stylevec_from_mel(transformed_mel)
 
-        return torch.from_numpy(np.array([stylevec, transformed_stylevec]))
+        return torch.from_numpy(np.array([stylevec, transformed_stylevec])), 0
 
 
 class Content_Dataset_Real(ParalellAudioDataset):
@@ -262,7 +262,7 @@ class Content_Dataset_Real(ParalellAudioDataset):
         mel1 = torch.Tensor.numpy(mel1[:max_time])
         mel2 = torch.Tensor.numpy(mel2[:max_time])
 
-        return torch.from_numpy(np.array([mel1, mel2]))
+        return torch.from_numpy(np.array([mel1, mel2])), 1
 
 
 class Content_Dataset_Fake(ParalellAudioDataset):
@@ -294,4 +294,4 @@ class Content_Dataset_Fake(ParalellAudioDataset):
         mel1 = torch.Tensor.numpy(mel1[:max_time])
         mel2 = torch.Tensor.numpy(mel2[:max_time])
 
-        return torch.from_numpy(np.array([mel1, mel2]))
+        return torch.from_numpy(np.array([mel1, mel2])), 0

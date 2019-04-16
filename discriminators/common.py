@@ -182,8 +182,6 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
     Gradients are updated after every (real, fake) batch pair.
     """
 
-    REAL_LABEL = 1
-    FAKE_LABEL = 0
     criterion = nn.BCELoss()
 
     if isinstance(num_batches, int):
@@ -199,18 +197,13 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
 
         dtor.zero_grad()
 
-        cfgs = [(real_loader, num_real_batches, REAL_LABEL),
-                (fake_loader, num_fake_batches, FAKE_LABEL)]
+        cfgs = [(real_loader, num_real_batches,),
+                (fake_loader, num_fake_batches,)]
 
-        for loader, num_batches, actual_label in cfgs:
+        for loader, num_batches in cfgs:
             if batch_index < num_batches:
 
-                data = iter(loader).next()
-                data_size = data.size(0)
-                labels = torch.full(
-                    (data_size, ),
-                    actual_label,
-                )
+                data, labels = iter(loader).next()
                 predictions = dtor(data).view(-1)
                 err = criterion(predictions, labels)
                 err.backward()

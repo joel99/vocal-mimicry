@@ -14,18 +14,22 @@
 
 * Other todo stuff
 *** TODO [#A] Write generator trainer (ie whole training loop)
-*** TODO [#A] Write dataloaders for the discriminator classes?
+*** DONE [#A] Write dataloaders for the discriminator classes?
+    CLOSED: [2019-04-15 Mon 22:11]
 **** Assigned to: Anish
     I don't think there's actually much to do here, the main annoyance is just
     that the data for content/identity can be variable-length so I can't
     actually pass arround batches as tensors (so each "batch" probably has to
     consist of a single example? Not sure how that interacts with SGD though)
+**** Solution: Literally just set batch_size to 1 for content/identity dtors
+     and things should work
 *** TODO [#A] Validate the train_discriminator code in
     discriminators/common.py
 **** Assigned to: Can't be Anish
      I found the basic structure online: would appreciate a review, since
      this is an absolutely critical function...
-*** TODO [#B] Make Dataset classes, train_dtor handle data labels?
+*** DONE [#B] Make Dataset classes, train_dtor handle data labels?
+    CLOSED: [2019-04-15 Mon 22:39]
 **** Assigned to: Anish
      Depends on the outcome of the discussion on "how to implement all combos"
 
@@ -35,3 +39,5 @@
 *** TODO Decide on actual hyperparameters in the various
     get_discriminator functions
 *** TODO Decide on which identity_dtor mode to use
+*** TODO Apparently way that dataloaders interact w/ labels is magic?
+    See https://stanford.edu/~shervine/blog/pytorch-how-to-generate-data-parallel
