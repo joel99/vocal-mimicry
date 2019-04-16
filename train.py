@@ -1,4 +1,3 @@
-import argparse
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -62,18 +61,18 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
     # Initialize the model and load checkpoint if needed #
     ######################################################
     model = ProjectModel(mel_size)
-    optimizer = Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters())
 
     # Paralellize the model if we're told to use multiple GPUs
     if not use_cpu and (len(gpu_ids) > 1) :
-        model = nn.DataParallel(model, args.gpu_ids)
+        model = nn.DataParallel(model, gpu_ids)
 
     # Load the checkpoint, if it is specified
     if load_file is None:
         start_epoch = 0
     else:
         # "path/to/checkpoint_xx.pth" -> xx
-        start_epoch = int(args.load_pthpath.split("_")[-1][:-4])
+        start_epoch = int(load_file.split("_")[-1][:-4])
         model_state_dict, optimizer_state_dict = load_checkpoint(load_file)
         if isinstance(model, nn.DataParallel):
             model.module.load_state_dict(model_state_dict)
@@ -91,10 +90,14 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
     dset_wrapper = VCTK_Wrapper(model.embedder,
                                 VCTK_Wrapper.MAX_NUM_PEOPLE,
                                 VCTK_Wrapper.MAX_NUM_SAMPLES)
-    dset_isvoice_real = Isvoice_Dataset_Real(dset_wrapper)
-    dset_isvoice_fake = Isvoice_Dataset_Fake(dset_wrapper)
-    dset_identity_real = Identity_Dataset_Real(dset_wrapper)
-    dset_identity_fake = Identity_Dataset_Fake(dset_wrapper)
+    dset_isvoice_real = Isvoice_Dataset_Real(dset_wrapper,
+                                             embedder, transformer)
+    dset_isvoice_fake = Isvoice_Dataset_Fake(dset_wrapper,
+                                             embedder, transformer)
+    dset_identity_real = Identity_Dataset_Real(dset_wrapper,
+                                               embedder)
+    dset_identity_fake = Identity_Dataset_Fake(dset_wrapper,
+                                               embedder, transformer)
 
     train_start_time = datetime.now()
     for epoch in range(num_epochs):

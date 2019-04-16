@@ -6,13 +6,15 @@
       I don't think really addresses this, so I feel like I might be missing
       some of the picture here. What I have now should be at least somewhat
       adequate though
-*** TODO [#B] Talk about the content discriminator
+*** DONE [#B] Talk about the content discriminator
+    CLOSED: [2019-04-16 Tue 16:24]
     I'm not convinced that the content discriminator is gonna work: I had to
     come up with the arch myself, as I couldn't find anything for this online
     I think we might be better off enforcing content similarity by using a
     resnet connection across the generator :( -Anish
     * ARDA: Use Speech2Text for content loss? https://github.com/awni/speech
 
+**** Solution: We're just gonna use the resnet way for now
 * Other todo stuff
 *** TODO [#A] Write generator trainer (ie whole training loop)
    * ARDA/ANISH need to collaborate on this one.
@@ -36,6 +38,8 @@
 **** Assigned to: Anish
      Depends on the outcome of the discussion on "how to implement all combos"
 
+*** DONE Implement stylevec_for_person by averaging over samples
+    CLOSED: [2019-04-16 Tue 17:36]
 * Simple stuff
 *** TODO In isvoice_dtor decide on max vs average pooling
 *** TODO In isvoice_dtor should I return scalar instead of 1d tensor?
@@ -44,4 +48,5 @@
 *** TODO Decide on which identity_dtor mode to use
 *** TODO Apparently way that dataloaders interact w/ labels is magic?
     See https://stanford.edu/~shervine/blog/pytorch-how-to-generate-data-parallel
-*** TODO How to take care of multiple GPUs in train loop? Do we even care?
+*** DONE How to take care of multiple GPUs in train loop? Do we even care?
+    CLOSED: [2019-04-16 Tue 17:36]

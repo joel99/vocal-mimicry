@@ -5,7 +5,7 @@ import torch
 
 from discriminators.isvoice_dtor import get_isvoice_discriminator
 from discriminators.content_dtor import get_content_discriminator
-from discriminitaors.identity_dtor import get_identity_dtor
+from discriminators.identity_dtor import get_identity_dtor
 
 
 def get_transformer(style_size, mel_size):
@@ -63,8 +63,7 @@ class ProjectModel(torch.nn.Module):
         where the probabilities are scalar Tensors
         """
 
-        source_style = self.embedder(source_mel)
-        transformed_mel = self.transformer(input_audio, target_style)
+        transformed_mel = self.transformer(source_mel, target_style)
         transformed_style = self.embedder(transformed_mel)
 
         isvoice_prob = self.isvoice_dtor(transformed_mel)

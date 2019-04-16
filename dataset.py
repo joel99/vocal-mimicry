@@ -23,7 +23,7 @@ class SoundDataset(Dataset):
 
     def __getitem__(self, index):
         full_path = join(self.source_dir, self.filenames[index])
-        return torch.tensor(np.load(full_path))
+        return torch.from_numpy(np.load(full_path))
 
 
 ######################################################################
@@ -97,7 +97,7 @@ class VCTK_Wrapper:
         np_mel = np.load(self.VCTK_MEL_ROOT + "/p" + str(actual_id) + "/p" +
                          str(actual_id) + "_" + "{:03d}".format(sample_id) +
                          ".npy")
-        return torch.tensor(np_mel)[None, :]
+        return torch.from_numpy(np_mel)[None, :]
 
     def _calculate_person_stylevecs():
         for pid in range(self.num_people):
