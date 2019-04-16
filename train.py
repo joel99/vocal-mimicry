@@ -10,117 +10,10 @@ from dataset import SoundDataset
 from datetime import datetime
 from model import ProjectModel
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--config-yml",
-    default="configs/basic.yml",
-    help="Path to a config file listing model and solver parameters.")
+from dataset import VCTK_Wrapper, \
+    Isvoice_Dataset_Real, Isvoice_Dataset_Fake, \
+    Identity_Dataset_Real, Identity_Dataset_Fake
 
-parser.add_argument_group(
-    "Arguments independent of experiment reproducibility")
-parser.add_argument("--gpu-ids",
-                    nargs="+",
-                    type=int,
-                    default=0,
-                    help="List of ids of GPUs to use.")
-parser.add_argument("--cpu-workers",
-                    type=int,
-                    default=4,
-                    help="Number of CPU workers for dataloader.")
-
-parser.add_argument_group("Checkpointing related arguments")
-parser.add_argument(
-    "--save-dirpath",
-    default="checkpoints/",
-    help=
-    "Path of directory to create checkpoint directory and save checkpoints.")
-parser.add_argument(
-    "--load-pthpath",
-    default="",
-    help="To continue training, path to .pth file of saved checkpoint.")
-
-# for reproducibility - refer https://pytorch.org/docs/stable/notes/randomness.html
-torch.manual_seed(0)
-torch.cuda.manual_seed_all(0)
-torch.backends.cudnn.benchmark = False
-torch.backends.cudnn.deterministic = True
-
-# ==============================================================================
-#   INPUT ARGUMENTS AND CONFIG
-# ==============================================================================
-
-args = parser.parse_args()
-
-# keys: {"dataset", "model", "solver"}
-config = yaml.load(open(args.config_yml))
-
-if isinstance(args.gpu_ids, int):
-    args.gpu_ids = [args.gpu_ids]
-device = torch.device(
-    "cuda", args.gpu_ids[0]) if args.gpu_ids[0] >= 0 else torch.device("cpu")
-
-# print config and args
-print(yaml.dump(config, default_flow_style=False))
-for arg in vars(args):
-    print("{:<20}: {}".format(arg, getattr(args, arg)))
-
-# ==============================================================================
-#   TRAINING SETUP
-# ==============================================================================
-
-model = None
-
-if -1 not in args.gpu_ids:
-    model = nn.DataParallel(model, args.gpu_ids)
-
-criterion = None
-optimizer = optim.Adam(model.parameters())
-# This variable is unused?
-# scheduler = None
-
-dataset = SoundDataset(config["dataset"]["source_dir"])
-dataloader = DataLoader(dataset,
-                        batch_size=config["solver"]["batch_size"],
-                        num_workers=args.cpu_workers)
-
-checkpoint_manager = CheckpointManager(model,
-                                       optimizer,
-                                       args.save_dirpath,
-                                       config=config)
-
-# if loading from checkpoint, adjust start epoch and load parameters
-if args.load_pthpath == "":
-    start_epoch = 0
-else:
-    # "path/to/checkpoint_xx.pth" -> xx
-    start_epoch = int(args.load_pthpath.split("_")[-1][:-4])
-
-    model_state_dict, optimizer_state_dict = load_checkpoint(args.load_pthpath)
-    if isinstance(model, nn.DataParallel):
-        model.module.load_state_dict(model_state_dict)
-    else:
-        model.load_state_dict(model_state_dict)
-    optimizer.load_state_dict(optimizer_state_dict)
-
-# =============================================================================
-#   TRAINING LOOP
-# =============================================================================
-train_begin = datetime.now()
-for epoch in range(config["solver"]["num_epochs"]):
-    # batch loop here
-    for i, batch in enumerate(dataloader):
-        for key in batch:
-            batch[key] = batch[key].to(device)
-
-        optimizer.zero_grad()
-        # Optimization here
-        # TODO
-    checkpoint_manager.step()
-    # Validation here, if done
-
-
-#########################################################################
-#########################################################################
 def get_transformer():
     # [Arda] Implement pls
     raise NotImplementedError()
@@ -139,6 +32,8 @@ def get_stylenet():
                 help="The GPU IDs to use. If -1 appears anywhere, then use CPU")
 @click.argument('--mel-size', required=True,
                 help="The number of channels in the mel-gram. Placeholder")
+@click.argument('--num-epochs', required=True,
+                help="The number of epochs to train for")
 
 # Checkpoint-related arguments #
 @click.option('--epoch-save-interval',
@@ -153,7 +48,8 @@ def get_stylenet():
 @click.option('--isvoice-mode', default='norm', help='One of [norm, cos, nn]')
 
 def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
-          load_file, torch_seed, gpu_ids, mel_size):
+          load_file, torch_seed, gpu_ids, mel_size,
+          num_epochs,):
 
     ############################
     # Reproducibility Settings #
@@ -197,9 +93,36 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
                                            save_dir, epoch_save_interval,
                                            start_epoch + 1)
 
-    # TODO Write the actual training loop
-    raise NotImplementedError("The hello")
+    #######################################################
+    # The actual training loop gaaah what a rollercoaster #
+    #######################################################
+    dset_wrapper = VCTK_Wrapper(model.embedder,
+                                VCTK_Wrapper.MAX_NUM_PEOPLE,
+                                VCTK_Wrapper.MAX_NUM_SAMPLES)
+    dset_isvoice_real = Isvoice_Dataset_Real(dset_wrapper)
+    dset_isvoice_fake = Isvoice_Dataset_Fake(dset_wrapper)
+    dset_identity_real = Identity_Dataset_Real(dset_wrapper)
+    dset_identity_fake = Identity_Dataset_Fake(dset_wrapper)
 
+    train_start_time = datetime.now()
+    for epoch in range(num_epochs):
+        epoch_start_time = datetime.now()
+
+        raise NotImplementedError("Implement it!")
+        checkpoint_manager.step()
+
+# train_begin = datetime.now()
+# for epoch in range(config["solver"]["num_epochs"]):
+#     # batch loop here
+#     for i, batch in enumerate(dataloader):
+#         for key in batch:
+#             batch[key] = batch[key].to(device)
+
+#         optimizer.zero_grad()
+#         # Optimization here
+#         # TODO
+#     checkpoint_manager.step()
+#     # Validation here, if done
 
 if __name__ == "__main__":
     train()
