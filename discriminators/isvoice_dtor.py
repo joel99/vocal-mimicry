@@ -77,29 +77,30 @@ class Isvoice_Discriminator(nn.Module):
         self.fc_layer = fc_from_arch(
             self.size_after_conv * self.conv_arch[-1][0], 1, fc_arch)
 
-    def forward(self, input_, pool_func=torch.max):
+    def forward(self, x, lengths, pool_func=torch.max):
         '''
         Run a set of inputs through the net to determine whether it is a voice
 
         Arguments:
-            images (Variable): A tensor of size (1, T, M) where
+            x (Variable): A tensor of size (N, T, M) where
                 N is the batch size
                 T is the number of timesteps
                 D is the dimenstionality of a timestep
+            lengths: Integer torch tensor of size (N,) of unpadded lengths
         Returns:
             A torch Tensor of size (1,) specifying the score for the given
             example
         '''
-        assert (len(input_.size()) == 3)
-        assert (input_.size(0) == 1)
+        assert (len(x.size()) == 3)
 
-        extended_input = input_[:, None, :]
+        # Convnet wants an extra dimension for channels, which we dont use
+        extended_input = x[:, None, :]
         after_conv = self.conv_layer.forward(extended_input)
 
         after_max = pool_func(after_conv, dim=2)
         if type(after_max) == tuple:
             after_max = after_max[0]
-        flattened = after_max.reshape(input_.size(0), -1)
+        flattened = after_max.reshape(x.size(0), -1)
 
         return torch.sigmoid(self.fc_layer(flattened))
 

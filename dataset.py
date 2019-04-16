@@ -1,12 +1,9 @@
 from functools import reduce
-from os.path import join
 from os import listdir
-
-import torch
+from os.path import join
 from torch.utils.data import Dataset
 import numpy as np
-
-from transformer.mem_transformer import MemTransformer
+import torch
 
 
 class SoundDataset(Dataset):
@@ -48,24 +45,47 @@ def coords_from_index(index, dimensions):
     return tuple(coords)
 
 
-def stylevec_from_person(style_pid):
-    """
-    Given a person's ID (a number), return the stylevector (probably the
-    average of the stylevectors for all their audio samples?)
+def pad_tensor_list(tensor_list, pad_dim=0, pad_element=0):
 
-    returns: The style vector as a torch tensor
-    """
-    # TODO [Alex] implement pls
-    raise NotImplementedError()
+    dim_permutation = list(range(len(tensor_list[0].size())))
+    dim_permutation[0] = pad_dim
+    dim_permutation[pad_dim] = 0
+
+    tensor_list = [t.permute(dim_permutation) for t in tensor_list]
+
+    for d in tensor_list:
+        if not (d.size()[1:] == tensor_list[0].size()[1:]):
+            raise RuntimeError("Probably forgot to call with correct pad_dim")
+
+    lengths = [d.size(0) for d in tensor_list]
+    max_length = max(lengths)
+    padded_data = torch.full([len(tensor_list), max_length] +
+                             list(tensor_list[0].size()[1:]), pad_element)
+
+    for index, d in enumerate(tensor_list):
+        padded_data[index][:lengths[index]] = d
+
+    return padded_data.permute([0] + [a + 1 for a in dim_permutation]), \
+        torch.tensor(lengths)
 
 
-def generate_voice(model, original_mel, stylevec):
+def collate_pad_tensors(sample_list, pad_dim=0, pad_element=0):
     """
-    Return a mel-spectrogram of the transformed voice
+    From the pytorch documentation, the collate function "merges" a list of
+    samples to form a mini-batch
 
-    Both original_mel and stylevec are torch tensors
+    :sample_list: A python list of (data, label) tuples
+    :pad_dimension: The dimension which is unequal in the samples
+        (there can only be one)
+    :pad_element: The element to pad with
     """
-    return model.forward(original_mel, stylevec)
+
+    data_list = [d for d in sample_list]
+    label_list = [d[1] for d in sample_list]
+
+    padded_data, lengths = pad_tensor_list(data_list, pad_dim, pad_element)
+
+    return padded_data, lengths, torch.tensor(label_list)
 
 
 class VCTK_Wrapper:
@@ -99,11 +119,12 @@ class VCTK_Wrapper:
                          ".npy")
         return torch.from_numpy(np_mel)[None, :]
 
-    def _calculate_person_stylevecs():
+    def _calculate_person_stylevecs(self, ):
         for pid in range(self.num_people):
             sample_stylevecs = [None] * self.num_samples
             for sid in range(self.num_samples):
-                sample_stylevecs[sid] = torch.from_numpy(self.embedder(self.mel_from_ids(pid, sid))[0])
+                sample_stylevecs[sid] = torch.from_numpy(
+                    self.embedder(self.mel_from_ids(pid, sid))[0])
             sample_stylevecs = np.array(sample_stylevecs)
             self.person_stylevecs[pid] = np.mean(sample_stylevecs, axis=0)
 
@@ -213,8 +234,8 @@ class Identity_Dataset_Real(ParallelAudioDataset):
         a1_mel = self.wrapper.mel_from_ids(pid, sid1)
         a2_mel = self.wrapper.mel_from_ids(pid, sid2)
 
-        s1_stylevec = embedder(a1_mel)
-        s2_stylevec = embedder(a2_mel)
+        s1_stylevec = self.embedder(a1_mel)
+        s2_stylevec = self.embedder(a2_mel)
 
         return torch.from_numpy(np.array([s1_stylevec, s2_stylevec])), 1
 
@@ -274,13 +295,8 @@ class Content_Dataset_Real(ParallelAudioDataset):
         mel1 = self.wrapper.mel_from_ids(p1id, sid)
         mel2 = self.wrapper.mel_from_ids(p2id, sid)
 
-        # [COMPATIBILITY] The following four lines assume that the first
-        # dimension of the mel-cepstrums is the one for time
-        max_time = min(mel1.size(0), mel2.size(0))
-        mel1 = torch.Tensor.numpy(mel1[:max_time])
-        mel2 = torch.Tensor.numpy(mel2[:max_time])
-
-        return torch.from_numpy(np.array([mel1, mel2])), 1
+        # [COMPATIBILITY] The following line
+        return pad_tensor_list([mel1, mel2], )[0], 1
 
 
 class Content_Dataset_Fake(ParallelAudioDataset):
@@ -306,10 +322,4 @@ class Content_Dataset_Fake(ParallelAudioDataset):
         mel1 = self.wrapper.mel_from_ids(p1id, s1id)
         mel2 = self.wrapper.mel_from_ids(p2id, s2id)
 
-        # [COMPATIBILITY] The following four lines assume that the first
-        # dimension of the mel-cepstrums is the one for time
-        max_time = min(mel1.size(0), mel2.size(0))
-        mel1 = torch.Tensor.numpy(mel1[:max_time])
-        mel2 = torch.Tensor.numpy(mel2[:max_time])
-
-        return torch.from_numpy(np.array([mel1, mel2])), 0
+        return pad_tensor_list([mel1, mel2])[0], 0

@@ -202,9 +202,8 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
 
         for loader, num_batches in cfgs:
             if batch_index < num_batches:
-
-                data, labels = iter(loader).next()
-                predictions = dtor(data).view(-1)
+                data, lengths, labels = next(iter(loader))
+                predictions = dtor(data, lengths).view(-1)
                 err = criterion(predictions, labels)
                 err.backward()
 

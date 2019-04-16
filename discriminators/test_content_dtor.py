@@ -8,6 +8,11 @@ import torch
 
 
 @pytest.fixture
+def batch_size():
+    return 42
+
+
+@pytest.fixture
 def mel_size():
     return 37
 
@@ -28,12 +33,18 @@ def num_timesteps():
 
 
 @pytest.fixture
-def example_data(num_timesteps, mel_size):
-    return torch.from_numpy(np.zeros((1, num_timesteps, mel_size))).float()
+def example_data(batch_size, num_timesteps, mel_size):
+    return torch.from_numpy(np.zeros(
+        (batch_size, 2, num_timesteps, mel_size))).float()
+
+
+@pytest.fixture
+def data_lengths(example_data, ):
+    return torch.ones((example_data.size(0), )).int()
 
 
 def test_content_discriminator(mel_size, time_res, fc_hidden_list,
-                                example_data):
+                               example_data, data_lengths):
 
     discrim = get_content_discriminator(mel_size)
-    discrim(example_data, example_data)
+    discrim(example_data, data_lengths)
