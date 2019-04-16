@@ -493,7 +493,7 @@ class AdaptiveEmbedding(nn.Module):
         return embed
 
 class MemTransformer(nn.Module):
-    def __init__(self, n_layer, n_head, d_model, d_head, d_inner,
+    def __init__(self, n_layer, n_head, d_model, d_head, d_inner, d_style
                  dropout, dropatt, 
                  div_val=1, pre_lnorm=False,
                  tgt_len=None, ext_len=None, mem_len=None, 
@@ -505,6 +505,9 @@ class MemTransformer(nn.Module):
         self.d_model = d_model
         self.n_head = n_head
         self.d_head = d_head
+        self.d_style = d_style
+
+        self.style2adain = nn.Linear(self.d_style, 2 * self.d_model)
 
         self.drop = nn.Dropout(dropout)
 
@@ -707,7 +710,7 @@ class MemTransformer(nn.Module):
         return core_out, new_mems
 
     def forward(self, data, style):
-        hidden, new_mems = self._forward(data, style)
+        hidden, new_mems = self._forward(data, self.style2adain(style))
 
         pred_hid = hidden[-self.tgt_len:]
 
