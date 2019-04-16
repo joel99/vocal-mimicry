@@ -105,7 +105,7 @@ class VCTK_Wrapper:
         return torch.tensor(np_mel)
 
 
-class ParalellAudioDataset(Dataset):
+class ParallelAudioDataset(Dataset):
     def __init__(self, wrapper, dims):
         super().__init__()
         self.wrapper = wrapper
@@ -116,7 +116,7 @@ class ParalellAudioDataset(Dataset):
         return self.length
 
 
-class Isvoice_Dataset_Real(ParalellAudioDataset):
+class Isvoice_Dataset_Real(ParallelAudioDataset):
     """
     A class for training the isvoice discriminator.
 
@@ -136,7 +136,7 @@ class Isvoice_Dataset_Real(ParalellAudioDataset):
         return self.wrapper.mel_from_ids(person_id, sample_id), 1
 
 
-class Isvoice_Dataset_Fake(ParalellAudioDataset):
+class Isvoice_Dataset_Fake(ParallelAudioDataset):
     """
     A class for training the isvoice discriminator with negative (generated)
     examples
@@ -168,7 +168,7 @@ class Isvoice_Dataset_Fake(ParalellAudioDataset):
         return fake_sample, 0
 
 
-class Identity_Dataset_Real(ParalellAudioDataset):
+class Identity_Dataset_Real(ParallelAudioDataset):
     """
     For training the identity discriminator: provides both positive and
     negative samples
@@ -205,7 +205,7 @@ class Identity_Dataset_Real(ParalellAudioDataset):
         return torch.from_numpy(np.array([s1_stylevec, s2_stylevec])), 1
 
 
-class Identity_Dataset_Fake(ParalellAudioDataset):
+class Identity_Dataset_Fake(ParallelAudioDataset):
     def __init__(
             self,
             wrapper,
@@ -235,7 +235,7 @@ class Identity_Dataset_Fake(ParalellAudioDataset):
         return torch.from_numpy(np.array([stylevec, transformed_stylevec])), 0
 
 
-class Content_Dataset_Real(ParalellAudioDataset):
+class Content_Dataset_Real(ParallelAudioDataset):
     """
     TODO Current the "real" and "generated" dataset for content actually
     aren't trained on generated data, just positive/negative samples from
@@ -265,7 +265,7 @@ class Content_Dataset_Real(ParalellAudioDataset):
         return torch.from_numpy(np.array([mel1, mel2])), 1
 
 
-class Content_Dataset_Fake(ParalellAudioDataset):
+class Content_Dataset_Fake(ParallelAudioDataset):
     """
     TODO See todo item for Content_Dataset_Real
     """
