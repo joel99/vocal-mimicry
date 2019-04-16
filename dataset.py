@@ -59,15 +59,6 @@ def stylevec_from_person(style_pid):
     raise NotImplementedError()
 
 
-def stylevec_from_mel(mel):
-    """
-    Given a mel-spectrogram (torch tensor), return the predicted stylevector
-    as a torch tensor
-    """
-    # TODO [Alex] implement pls
-    raise NotImplementedError()
-
-
 def generate_voice(model, original_mel, stylevec):
     """
     Return a mel-spectrogram of the transformed voice
@@ -85,16 +76,19 @@ class VCTK_Wrapper:
     # For whatever reason, the ID of the first person is actually 225
     STARTING_ID = 225
 
-    def __init__(self, num_people, num_samples):
+    def __init__(self, embedder, num_people, num_samples):
 
         assert (num_people <= self.MAX_NUM_PEOPLE)
         assert (num_samples <= self.MAX_NUM_SAMPLES)
         self.num_samples = num_samples
         self.num_people = num_people
 
-    def mel_from_ids(self, person_id, sample_id):
+        self.embedder = embedder
 
-        # TODO [Joel] Does this implementation look alright?
+        self.person_stylevecs = [None] * num_people
+        self._calculate_person_stylevecs()
+
+    def mel_from_ids(self, person_id, sample_id):
 
         assert (person_id <= self.num_people)
         assert (sample_id <= self.num_samples)
@@ -103,7 +97,20 @@ class VCTK_Wrapper:
         np_mel = np.load(self.VCTK_MEL_ROOT + "/p" + str(actual_id) + "/p" +
                          str(actual_id) + "_" + "{:03d}".format(sample_id) +
                          ".npy")
-        return torch.tensor(np_mel)
+        return torch.tensor(np_mel)[None, :]
+
+    def _calculate_person_stylevecs():
+        for pid in range(self.num_people):
+            sample_stylevecs = [None] * self.num_samples
+            for sid in range(self.num_samples):
+                sample_stylevecs[sid] = torch.from_numpy(self.embedder(self.mel_from_ids(pid, sid))[0])
+            sample_stylevecs = np.array(sample_stylevecs)
+            self.person_stylevecs[pid] = np.mean(sample_stylevecs, axis=0)
+
+        self.person_stylevecs = torch.from_numpy(self.person_stylevecs)
+
+    def person_stylevec(self, pid):
+        return self.person_stylevecs[pid]
 
 
 class ParallelAudioDataset(Dataset):
@@ -146,6 +153,8 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
     def __init__(
             self,
             wrapper,
+            embedder,
+            transformer,
     ):
         """
         There are (people * samples) original "real" files, and (people)
@@ -153,6 +162,8 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
         """
         dims = (wrapper.num_people, wrapper.num_people, wrapper.num_samples)
         super().__init__(self, dims)
+        self.embedder = embedder
+        self.transformer = transformer
 
     def __getitem__(self, index):
         """
@@ -164,8 +175,8 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
             source_pid, source_sid = coords_from_index(index, self.dims)
         source_audio = self.wrapper.mel_from_ids(source_pid, source_sid)
 
-        stylevec = stylevec_from_person(style_pid)
-        fake_sample = generate_voice(source_audio, stylevec)
+        stylevec = self.wrapper.person_stylevec(style_pid)
+        fake_sample = self.transformer(source_audio, stylevec)
         return fake_sample, 0
 
 
@@ -185,6 +196,7 @@ class Identity_Dataset_Real(ParallelAudioDataset):
     def __init__(
             self,
             wrapper,
+            embedder,
     ):
         """
         There are (people * samples) original "real" files, and (people)
@@ -192,6 +204,7 @@ class Identity_Dataset_Real(ParallelAudioDataset):
         """
         dims = (wrapper.num_people, wrapper.num_samples, wrapper.num_samples)
         super().__init__(self, dims)
+        self.embedder = embedder
 
     def __getitem__(self, index):
 
@@ -200,8 +213,8 @@ class Identity_Dataset_Real(ParallelAudioDataset):
         a1_mel = self.wrapper.mel_from_ids(pid, sid1)
         a2_mel = self.wrapper.mel_from_ids(pid, sid2)
 
-        s1_stylevec = stylevec_from_mel(a1_mel)
-        s2_stylevec = stylevec_from_mel(a2_mel)
+        s1_stylevec = embedder(a1_mel)
+        s2_stylevec = embedder(a2_mel)
 
         return torch.from_numpy(np.array([s1_stylevec, s2_stylevec])), 1
 
@@ -210,6 +223,8 @@ class Identity_Dataset_Fake(ParallelAudioDataset):
     def __init__(
             self,
             wrapper,
+            embedder,
+            transformer,
     ):
         """
         There are (people * samples) original "real" files, and (people)
@@ -221,6 +236,8 @@ class Identity_Dataset_Fake(ParallelAudioDataset):
             wrapper.num_people - 1,
         )
         super().__init__(self, dims)
+        self.embedder = embedder
+        self.transformer = transformer
 
     def __getitem__(self, index):
         source_pid, source_sid, style_pid = coords_from_index(index, self.dims)
@@ -229,9 +246,9 @@ class Identity_Dataset_Fake(ParallelAudioDataset):
 
         source_mel = self.wrapper.mel_from_ids(source_pid, source_sid)
 
-        stylevec = stylevec_from_person(source_pid)
-        transformed_mel = generate_voice(source_mel, stylevec)
-        transformed_stylevec = stylevec_from_mel(transformed_mel)
+        stylevec = self.wrapper.person_stylevec(source_pid)
+        transformed_mel = self.transformer(source_mel, stylevec)
+        transformed_stylevec = self.embedder(transformed_mel)
 
         return torch.from_numpy(np.array([stylevec, transformed_stylevec])), 0
 
