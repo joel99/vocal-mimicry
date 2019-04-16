@@ -11,9 +11,11 @@
     come up with the arch myself, as I couldn't find anything for this online
     I think we might be better off enforcing content similarity by using a
     resnet connection across the generator :( -Anish
+    * ARDA: Use Speech2Text for content loss? https://github.com/awni/speech
 
 * Other todo stuff
 *** TODO [#A] Write generator trainer (ie whole training loop)
+   * ARDA/ANISH need to collaborate on this one.
 *** DONE [#A] Write dataloaders for the discriminator classes?
     CLOSED: [2019-04-15 Mon 22:11]
 **** Assigned to: Anish
@@ -23,6 +25,7 @@
     consist of a single example? Not sure how that interacts with SGD though)
 **** Solution: Literally just set batch_size to 1 for content/identity dtors
      and things should work
+   * ARDA: We should consider padding instead.
 *** TODO [#A] Validate the train_discriminator code in
     discriminators/common.py
 **** Assigned to: Can't be Anish
