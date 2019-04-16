@@ -10,6 +10,7 @@ from torch import nn
 import numpy as np
 import math
 
+
 def reformat_data(data):
     """
     Given some data, reformat it so that it corresponds to the specification
@@ -135,7 +136,8 @@ def convnet_from_arch(mel_size, arch):
 
 def fc_from_arch(input_dim, output_dim, hidden_list):
     """
-    Create a multi-layer fully-connected neural network given the specifications
+    Create a multi-layer fully-connected neural network given the
+    specifications
 
     :input_dim: An integer
     :output_dim: An integer
@@ -151,38 +153,61 @@ def fc_from_arch(input_dim, output_dim, hidden_list):
     return nn.Sequential(*layers)
 
 
-def train_discriminator(dtor, realspec_loader, fakespec_loader, num_epochs, lr=.0002):
+def train_dtor(dtor, optimizer,
+               real_loader, fake_loader,
+               num_batches):
     """
     Most of this code is stripped shamelelssly from
     https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
 
     But it's not quite the same, so I would really appreciate a sanity check
+
+    :dtor: A model representing a discriminator. The forward() function should
+        return a probability that the input is drawn from the real
+        distribution
+    :optimizer: An already-initalized Pytorch optimizer object.
+        NOTE: The dtor params need to already be baked into the optimizer: I'm
+              not sure if I could ensure this myself
+              (see torch.optim.Optimization.add_param_group?)
+    :real_loader: A dataloader object drawing examples from real distribution
+    :fake_loader: A dataloader object drawing examples from fake distribution
+    :num_batches: An integer or a tuple. If an integer, number of real and fake
+        batches drawn will be equal. If tuple, should be (num_real, num_fake)
+
+    According to Goodfellow's paper, the number of real and fake batches
+    should be equal: I allow different options anyways
+
+    Gradients are updated after every (real, fake) batch pair.
     """
 
-    # TODO Make sure that this actually works...
-
-    real_label = 1
-    fake_label = 0
-
+    REAL_LABEL = 1
+    FAKE_LABEL = 0
     criterion = nn.BCELoss()
-    optimizer = torch.optim.Adam(dtor.parameters(), lr=lr, betas=(beta1, 0.999))
 
-    for epoch in range(num_epochs):
+    if isinstance(num_batches, int):
+        num_real_batches = num_batches
+        num_fake_batches = num_batches
+    elif isinstance(num_batches, tuple):
+        num_real_batches, num_fake_batches = num_batches
+    else:
+        raise TypeError("Invalid type for num_batches: "
+                        + str(type(num_batches)))
+
+    for batch_index in range(len(max(num_real_batches, num_fake_batches))):
 
         dtor.zero_grad()
 
-        for index, real_data in enumerate(realspec_loader):
-            b_size = real_data.size(0)
-            labels = torch.full((b_size,), real_label,)
-            predictions = dtor(real_data).view(-1)
-            errD_real = criterion(predictions, labels)
-            errD_real.backward()
+        cfgs = [(real_loader, num_real_batches, REAL_LABEL),
+                (fake_loader, num_fake_batches, FAKE_LABEL)]
 
-        for index, fake_data in enumerate(fakespec_loader):
-            b_size = real_data.size(0)
-            labels = torch.full((b_size,), fake_label,)
-            predictions = dtor(fake_data).view(-1)
-            errD_fake = criterion(predictions, labels)
-            errD_fake.backward()
+        for loader, num_batches, actual_label in cfgs:
+            if batch_index < num_batches:
+
+                data = iter(loader).next()
+                data_size = data.size(0)
+                labels = torch.full((data_size,), actual_label,)
+                predictions = dtor(data).view(-1)
+                err = criterion(predictions, labels)
+                err.backward()
 
         optimizer.step()
