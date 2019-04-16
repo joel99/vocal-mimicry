@@ -1,10 +1,12 @@
-import torch
-from torch.utils.data import Dataset
+from functools import reduce
 from os.path import join
 from os import listdir
+
+import torch
+from torch.utils.data import Dataset
 import numpy as np
 
-from functools import reduce
+from transformer.mem_transformer import MemTransformer
 
 
 class SoundDataset(Dataset):
@@ -66,14 +68,13 @@ def stylevec_from_mel(mel):
     raise NotImplementedError()
 
 
-def generate_voice(original_mel, stylevec):
+def generate_voice(model, original_mel, stylevec):
     """
     Return a mel-spectrogram of the transformed voice
 
     Both original_mel and stylevec are torch tensors
     """
-    # TODO [Arda] implement pls
-    raise NotImplementedError()
+    return model.forward(original_mel, stylevec)
 
 
 class VCTK_Wrapper:
