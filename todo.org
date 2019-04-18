@@ -28,7 +28,8 @@
 **** Solution: Literally just set batch_size to 1 for content/identity dtors
      and things should work
    * ARDA: We should consider padding instead.
-*** TODO [#A] Validate the train_discriminator code in
+*** DONE [#A] Validate the train_discriminator code in
+    CLOSED: [2019-04-16 Tue 22:35]
     discriminators/common.py
 **** Assigned to: Can't be Anish
      I found the basic structure online: would appreciate a review, since
@@ -42,11 +43,13 @@
     CLOSED: [2019-04-16 Tue 17:36]
 * Simple stuff
 *** TODO In isvoice_dtor decide on max vs average pooling
-*** TODO In isvoice_dtor should I return scalar instead of 1d tensor?
+*** DONE In isvoice_dtor should I return scalar instead of 1d tensor?
+    CLOSED: [2019-04-16 Tue 22:35]
 *** TODO Decide on actual hyperparameters in the various
     get_discriminator functions
 *** TODO Decide on which identity_dtor mode to use
-*** TODO Apparently way that dataloaders interact w/ labels is magic?
+*** DONE Apparently way that dataloaders interact w/ labels is magic?
+    CLOSED: [2019-04-16 Tue 22:35]
     See https://stanford.edu/~shervine/blog/pytorch-how-to-generate-data-parallel
 *** DONE How to take care of multiple GPUs in train loop? Do we even care?
     CLOSED: [2019-04-16 Tue 17:36]

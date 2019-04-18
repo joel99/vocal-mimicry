@@ -17,7 +17,7 @@ def evaluate(model, val_dset, config=config):
     return total_loss / len(val_dset)
 
 
-def train(model, train_dset, val_dset, config=config):
+def train(model, optimizer, train_dset, config=config):
     # Turn on training mode which enables dropout.
     model.train()
 
@@ -32,4 +32,4 @@ def train(model, train_dset, val_dset, config=config):
         optimizer.step()
         pbar.set_postfix({"loss": loss})
 
-    return evaluate(model, val_dset, config=config)
+    return evaluate(model, train_dset, config=config)
