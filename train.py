@@ -133,9 +133,11 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
     # dset_identity_fake = Identity_Dataset_Fake(dset_wrapper,
     #                                            embedder, transformer)
     dload_isvoice_real = DataLoader(dset_isvoice_real,
-                                    batch_size=batch_size_dtor_isvoice)
+                                    batch_size=batch_size_dtor_isvoice,
+                                    collate_fn=collate_pad_tensors)
     dload_isvoice_fake = DataLoader(dset_isvoice_fake,
-                                    batch_size=batch_size_dtor_isvoice)
+                                    batch_size=batch_size_dtor_isvoice,
+                                    collate_fn=collate_pad_tensors)
 
     #######################################################
     # The actual training loop gaaah what a rollercoaster #
