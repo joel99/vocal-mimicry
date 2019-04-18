@@ -196,6 +196,7 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
     for batch_index in range(len(max(num_real_batches, num_fake_batches))):
 
         dtor.zero_grad()
+        optimizer.zero_grad()
 
         cfgs = [(real_loader, num_real_batches,),
                 (fake_loader, num_fake_batches,)]

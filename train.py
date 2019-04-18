@@ -11,7 +11,11 @@ from model import ProjectModel
 
 from dataset import VCTK_Wrapper, \
     Isvoice_Dataset_Real, Isvoice_Dataset_Fake, \
-    Identity_Dataset_Real, Identity_Dataset_Fake
+    Identity_Dataset_Real, Identity_Dataset_Fake, \
+    collate_pad_tensors
+
+from torch.utils.data import DataLoader
+
 
 @click.command()
 @click.option('--verbose', default=0,)
@@ -25,6 +29,15 @@ from dataset import VCTK_Wrapper, \
                 help="The number of channels in the mel-gram. Placeholder")
 @click.argument('--num-epochs', required=True,
                 help="The number of epochs to train for")
+
+@click.argument('--lr-dtor-isvoice', default=0.001)
+@click.argument('--lr-tform', default=0.001)
+
+@click.argument('--num-batches-dtor-isvoice', required=True)
+@click.argument('--batch-size-dtor-isvoice', required=True)
+
+@click.argument('--num-batches-tform', required=True)
+@click.argument('--batch-size-tform', required=True)
 
 # Checkpoint-related arguments #
 @click.option('--epoch-save-interval',
@@ -40,7 +53,17 @@ from dataset import VCTK_Wrapper, \
 
 def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
           load_file, torch_seed, gpu_ids, mel_size,
-          num_epochs,):
+          num_epochs,
+          lr_tform, lr_dtor_isvoice,
+          num_batches_dtor_isvoice, batch_size_dtor_isvoice,
+          num_batches_tform, batch_size_tform):
+
+    ############################
+    # Setting up the constants #
+    ############################
+
+    SAVE_DTOR_ISVOICE = load_file + "/" + "isvoice-dtor"
+    SAVE_TRANSFORMER = load_file + "/" + "transformer"
 
     ############################
     # Reproducibility Settings #
@@ -57,15 +80,27 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
     use_cpu = -1 in gpu_ids
     device = torch.device("cpu" if use_cpu else "cuda")
 
-    ######################################################
-    # Initialize the model and load checkpoint if needed #
-    ######################################################
+    ###############################################
+    # Initialize the model and related optimizers #
+    ###############################################
     model = ProjectModel(mel_size)
-    optimizer = torch.optim.Adam(model.parameters())
+    tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
+                                       lr=lr_tform)
+    tform_checkpointer = CheckpointManager(model.transformer,
+                                           tform_optimizer,
+                                           SAVE_TRANSFORMER,
+                                           epoch_save_interval,
+                                           start_epoch + 1)
 
-    # Paralellize the model if we're told to use multiple GPUs
-    if not use_cpu and (len(gpu_ids) > 1) :
-        model = nn.DataParallel(model, gpu_ids)
+    dtor_isvoice_optimizer = torch.optim.Adam(model.isvoice_dtor.parameters(),
+                                              lr=lr_dtor_isvoice)
+    dtor_isvoice_checkpointer = CheckpointManager(model.isvoice_dtor,
+                                                  dtor_isvoice_optimizer,
+                                                  SAVE_DTOR_ISVOICE,
+                                                  epoch_save_interval,
+                                                  start_epoch + 1)
+
+    ###############################################
 
     # Load the checkpoint, if it is specified
     if load_file is None:
@@ -73,20 +108,19 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
     else:
         # "path/to/checkpoint_xx.pth" -> xx
         start_epoch = int(load_file.split("_")[-1][:-4])
-        model_state_dict, optimizer_state_dict = load_checkpoint(load_file)
-        if isinstance(model, nn.DataParallel):
-            model.module.load_state_dict(model_state_dict)
-        else:
-            model.load_state_dict(model_state_dict)
-        optimizer.load_state_dict(optimizer_state_dict)
 
-    checkpoint_manager = CheckpointManager(model, optimizer,
-                                           save_dir, epoch_save_interval,
-                                           start_epoch + 1)
+        tform_md, tform_od = load_checkpoint(SAVE_TRANSFORMER)
+        model.transformer.load_state_dict(tform_md)
+        tform_optimizer.load_state_dict(tform_od)
 
-    #######################################################
-    # The actual training loop gaaah what a rollercoaster #
-    #######################################################
+        dtor_isvoice_md, dtor_isvoice_od = load_checkpoint(SAVE_DTOR_ISVOICE)
+        model.dtor_isvoice.load_state_dict(dtor_isvoice_md)
+        tform_optimizer.load_state_dict(dtor_isvoice_od)
+
+    ##########################
+    # Declaring the datasets #
+    ##########################
+
     dset_wrapper = VCTK_Wrapper(model.embedder,
                                 VCTK_Wrapper.MAX_NUM_PEOPLE,
                                 VCTK_Wrapper.MAX_NUM_SAMPLES)
@@ -94,30 +128,32 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
                                              embedder, transformer)
     dset_isvoice_fake = Isvoice_Dataset_Fake(dset_wrapper,
                                              embedder, transformer)
-    dset_identity_real = Identity_Dataset_Real(dset_wrapper,
-                                               embedder)
-    dset_identity_fake = Identity_Dataset_Fake(dset_wrapper,
-                                               embedder, transformer)
+
+    # We're enforcing identity via a resnet connection for now, so unused
+    # dset_identity_real = Identity_Dataset_Real(dset_wrapper,
+    #                                            embedder)
+    # dset_identity_fake = Identity_Dataset_Fake(dset_wrapper,
+    #                                            embedder, transformer)
+
+    dload_isvoice_real = DataLoader(dset_isvoice_real,
+                                    batch_size=batch_size_dtor_isvoice)
+    dload_isvoice_fake = DataLoader(dset_isvoice_fake,
+                                    batch_size=batch_size_dtor_isvoice)
+
+    #######################################################
+    # The actual training loop gaaah what a rollercoaster #
+    #######################################################
 
     train_start_time = datetime.now()
     for epoch in range(num_epochs):
         epoch_start_time = datetime.now()
+        train_dtor(model.isvoice_dtor, dtor_isvoice_optimizer,
+                   dload_isvoice_real, dload_isvoice_fake,
+                   batches_dtor_isvoice)
+        dtor_isvoice_checkpointer.step()
 
-        raise NotImplementedError("Implement it!")
-        checkpoint_manager.step()
-
-# train_begin = datetime.now()
-# for epoch in range(config["solver"]["num_epochs"]):
-#     # batch loop here
-#     for i, batch in enumerate(dataloader):
-#         for key in batch:
-#             batch[key] = batch[key].to(device)
-
-#         optimizer.zero_grad()
-#         # Optimization here
-#         # TODO
-#     checkpoint_manager.step()
-#     # Validation here, if done
+        # Train generators here
+        raise NotImplementedError("Fix")
 
 if __name__ == "__main__":
     train()
