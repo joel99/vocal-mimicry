@@ -144,6 +144,22 @@ class ParallelAudioDataset(Dataset):
     def __len__(self):
         return self.length
 
+class Generator_Dataset(ParallelAudioDataset):
+    """
+    Dataset for training the generator.
+
+    Loads every voice in VCTK, with random style vectors.
+    """
+
+    def __init__(self, wrapper):
+        dims = (wrapper.num_people, wrapper.num_samples)
+        super().__init__(self, dims)
+
+    def __getitem__(self, index):
+        person_id, sample_id = coords_from_index(index, self.dims)
+        style = self.wrapper.person_stylevec(np.random.randint(0, self.wrapper.num_people))
+        mel = self.wrapper.mel_from_ids(person_id, sample_id)
+        return mel, style
 
 class Isvoice_Dataset_Real(ParallelAudioDataset):
     """

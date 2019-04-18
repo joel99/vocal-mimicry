@@ -13,7 +13,7 @@ from transformer.new_train import train as train_gen
 
 from dataset import VCTK_Wrapper, \
     Isvoice_Dataset_Real, Isvoice_Dataset_Fake, \
-    Identity_Dataset_Real, Identity_Dataset_Fake
+    Identity_Dataset_Real, Identity_Dataset_Fake, Generator_Dataset
 
 @click.command()
 @click.option('--verbose', default=0,)
@@ -100,6 +100,7 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
                                                embedder)
     dset_identity_fake = Identity_Dataset_Fake(dset_wrapper,
                                                embedder, transformer)
+    dset_generator_train = Generator_Dataset(dset_wrapper)
 
     rf_d = model.isvoice_dtor
     rf_d_opt = optim.Adam(rf_d.parameters())
@@ -118,13 +119,8 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
         ################
         # (G) Update Generator
         ################
-        train_gen(model, )
-        # TODO Implement train_gen loop
-        # Need as input:
-        # isvoice discriminator, identity discriminator, content discriminator
-        # style vector, real audio
+        val_loss = train_gen(model, dset_generator_train, dset_generator_train)
 
-        raise NotImplementedError("Implement it!")
         checkpoint_manager.step()
 
 # train_begin = datetime.now()
