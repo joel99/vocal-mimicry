@@ -157,6 +157,7 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
         # (G) Update Generator
         ################
         val_loss = train_gen(model, tform_optimizer, dset_generator_train)
+        tform_checkpointer.step()
 
 if __name__ == "__main__":
     train()
