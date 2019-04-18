@@ -29,22 +29,23 @@ def get_content_discriminator(mel_size):
 
 
 class Content_Discriminator(Isvoice_Discriminator):
-    def forward(self, i1, i2):
+    def forward(self, x, lengths):
         """
-        :i1: A (1, T, M) dimensional tensor (representing a single mel-grams)
-        :i2: A (1, T, M) dimensional tensor (as bove)
+        :i1: A (N, 2, T, M) dimensional tensor (representing many mel-grams)
 
-        NOTE: the user will have to ensure that the spectrograms are both
-        clipped to the same timeframe somehow
-
-        :returns: The probability that both inputs have the same content
+        :returns: The probability tensor (size n) that inputs[n] same content
         """
-        assert (i1.size() == i2.size())
-        assert (i1.size(0) == 1)
+
+        assert (len(x.size()) == 4)
+        assert (x.size(1) == 2)
+
+        i1 = x[:, 0, :]
+        i2 = x[:, 1, :]
 
         expanded_diff = ((i1 - i2)**2)
 
         return super(Content_Discriminator, self).forward(expanded_diff,
+                                                          lengths,
                                                           pool_func=torch.mean)
 
 

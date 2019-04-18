@@ -1,5 +1,5 @@
 import argparse
-from os import listdir, makedirs
+from os import listdir, makedirs, walk
 from os.path import isfile, join
 
 from librosa.feature import melspectrogram
@@ -18,13 +18,17 @@ TODO:
 - Investigate own VAE [lstm encoder -> wavenet decoder]
 """
 
-def preprocess_wrap(embedder, name, audio_paths, args):
-    for index, path in tqdm(enumerate(audio_paths)):
-        audio, _ = load(join(args.in_dir, path), sr=None)
-        fn = '{}_{:04d}.npy'.format(name, index)
-        gram = embedder(y=audio, sr=args.fs).astype(np.float16)
-        np.save(join(args.out_dir, fn), gram, allow_pickle=False)
-
+def preprocess_wrap(embedder, name, in_dir, args):
+    for root, _, files in tqdm(walk(in_dir)):
+        out_root = root[root.find('wav48') + 6:]
+        out_dir = join(args.out_dir, out_root)
+        makedirs(out_dir, exist_ok=True)
+        for name in files:
+            audio, _ = load(join(root, name), sr=None)
+            gram = embedder(y=audio, sr=args.fs).astype(np.float16)
+            name_stem = name[:name.rfind('.')]
+            fn = '{}.npy'.format(name_stem)
+            np.save(join(out_dir, fn), gram, allow_pickle=False)
 preprocess_mel = partial(preprocess_wrap, melspectrogram, 'mel')
 
 def if_wrap(y, sr):
@@ -39,7 +43,7 @@ def main():
     parser.add_argument(
         "--in-dir", default="data/raw/",
         help="Path to raw audio."
-    ) # TODO: deal with non-flat directory structure of VCTK
+    )
 
     valid_methods = ["mel", "if", "listener"]
     parser.add_argument(
@@ -62,13 +66,12 @@ def main():
     args.out_dir = join(args.out_dir, args.method)
     makedirs(args.out_dir, exist_ok=True)
 
-    audio_paths = [f for f in listdir(args.in_dir) if isfile(join(args.in_dir, f))]
     if args.method==valid_methods[0]:
-        preprocess_mel(audio_paths, args)
+        preprocess_mel(args.in_dir, args)
     if args.method==valid_methods[1]:
-        preprocess_if(audio_paths, args)
+        preprocess_if(args._in_dir, args)
     if args.method==valid_methods[2]:
-        preprocess_mel(audio_paths, args)
+        preprocess_mel(args.in_dir, args)
 
 if __name__ == "__main__":
     main()
