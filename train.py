@@ -9,6 +9,8 @@ from utils.checkpointing import CheckpointManager, load_checkpoint
 from dataset import SoundDataset
 from datetime import datetime
 from model import ProjectModel
+from discriminators.common import train_dtor
+from transformer.new_train import train as train_gen
 
 from dataset import VCTK_Wrapper, \
     Isvoice_Dataset_Real, Isvoice_Dataset_Fake, \
@@ -96,9 +98,28 @@ def train(epoch_save_interval, isvoice_mode, verbose, cpu_workers, save_dir,
     dset_identity_real = Identity_Dataset_Real(dset_wrapper)
     dset_identity_fake = Identity_Dataset_Fake(dset_wrapper)
 
+    rf_d = model.isvoice_dtor
+    rf_d_opt = optim.Adam(rf_d.parameters())
+    gen = model.transformer
+    gen_opt = optim.Adam(gen.parameters())
+
     train_start_time = datetime.now()
+    print("Started Training at {}".format(train_start_time))
     for epoch in range(num_epochs):
         epoch_start_time = datetime.now()
+        ################
+        # (D1) Update Real vs Fake Discriminator
+        ################
+        train_dtor(rf_d, rf_d_opt, dset_isvoice_real, dset_isvoice_fake)
+
+        ################
+        # (G) Update Generator
+        ################
+        train_gen(model, )
+        # TODO Implement train_gen loop
+        # Need as input:
+        # isvoice discriminator, identity discriminator, content discriminator
+        # style vector, real audio
 
         raise NotImplementedError("Implement it!")
         checkpoint_manager.step()
