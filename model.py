@@ -67,7 +67,11 @@ class ProjectModel(torch.nn.Module):
         transformed_style = self.embedder(transformed_mel)
 
         isvoice_prob = self.isvoice_dtor(transformed_mel)
-        content_prob = self.content_dtor(source_mel, transformed_mel)
-        identity_prob = self.identity_dtor(target_style, transformed_style)
+        content_prob = self.content_dtor(torch.stack((source_mel,
+                                                      transformed_mel),
+                                                     dim=1),)
+        identity_prob = self.identity_dtor(torch.stack((target_style,
+                                                        transformed_style),
+                                                       dim=1))
 
         return transformed_mel, isvoice_prob, content_prob, identity_prob
