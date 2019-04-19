@@ -1,5 +1,6 @@
 * To discuss as group
-*** TODO [#B] How to implement all combos of (real/generated) and
+*** DONE [#B] How to implement all combos of (real/generated) and
+    CLOSED: [2019-04-18 Thu 18:10]
     (positive/negative) samples for the dtor dataset classes
 **** Assigned to: Anish
       Like I said my understanding of GANs comes from the original paper which
@@ -16,7 +17,8 @@
 
 **** Solution: We're just gonna use the resnet way for now
 * Other todo stuff
-*** TODO [#A] Write generator trainer (ie whole training loop)
+*** DONE [#A] Write generator trainer (ie whole training loop)
+    CLOSED: [2019-04-18 Thu 18:10]
    * ARDA/ANISH need to collaborate on this one.
 *** DONE [#A] Write dataloaders for the discriminator classes?
     CLOSED: [2019-04-15 Mon 22:11]
@@ -53,3 +55,9 @@
     See https://stanford.edu/~shervine/blog/pytorch-how-to-generate-data-parallel
 *** DONE How to take care of multiple GPUs in train loop? Do we even care?
     CLOSED: [2019-04-16 Tue 17:36]
+
+* Final todo stuff (Thursday)
+** Train style embedder [Arda]
+** Load trained style embedder into ProjectModel
+** Proper filename handling on checkpointers [Anish]
+** Arda expects time in the WRONG axis
