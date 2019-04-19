@@ -22,18 +22,23 @@ def get_transformer(style_size, mel_size):
     raise NotImplementedError()
 
 
-def get_embedder():
+def get_embedder(path='embedder/data/best_model', cuda = None):
     """
-    Net should extend pytorch.module so it can be easily checkpointed?
+    Returns a embedding model captures the sytle of a speakers voice
 
     returns (network, style_size)
 
-    where network which takes an mel-spectrogram (1 x T x M)
-    and returns a stylevector (1 x S) tensor
-
-    and style_size is a plain old integer
+    where network which takes a transformation of a speakers utterances (Batch Size x 1 x Features x Frames)
     """
-    raise NotImplementedError()
+
+    from embedding import embeddings
+
+    if path != None:
+        embedding_size, num_classes = embeddings.parse_params(path)
+        return embeddings.load_embedder(path, embedding_size, num_classes, cuda)
+    else:
+        print("No Model Found, initializing random weights")
+        return embeddings.load_embedder()
 
 
 class ProjectModel(torch.nn.Module):
