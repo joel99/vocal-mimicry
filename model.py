@@ -5,7 +5,7 @@ import torch
 
 from discriminators.isvoice_dtor import get_isvoice_discriminator
 from discriminators.content_dtor import get_content_discriminator
-from discriminators.identity_dtor import get_identity_dtor
+from discriminators.identity_dtor import get_identity_discriminator
 
 
 def get_transformer(style_size, mel_size):
@@ -54,7 +54,7 @@ class ProjectModel(torch.nn.Module):
 
         self.isvoice_dtor = get_isvoice_discriminator(self.mel_size)
         self.content_dtor = get_content_discriminator(self.mel_size)
-        self.identity_dtor = get_identity_dtor(self.style_size)
+        self.identity_dtor = get_identity_discriminator(self.style_size)
         self.transformer = get_transformer(self.style_size, self.mel_size)
 
     def forward(self, target_style, source_mel):

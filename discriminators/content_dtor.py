@@ -7,9 +7,9 @@ import torch
 from torch import nn
 import math
 
-from common import fc_from_arch, convnet_from_arch
+from .common import fc_from_arch, convnet_from_arch
 
-from isvoice_dtor import Isvoice_Discriminator
+from .isvoice_dtor import Isvoice_Discriminator
 
 
 def get_content_discriminator(mel_size):

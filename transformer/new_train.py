@@ -3,7 +3,7 @@ import torch
 from torch import nn, optim
 
 
-def evaluate(model, val_dset, config=config):
+def evaluate(model, val_dset, config=None):
     model.eval()
     criterion = nn.BCELoss()
 
@@ -18,7 +18,7 @@ def evaluate(model, val_dset, config=config):
     return total_loss / len(val_dset)
 
 
-def train(model, optimizer, train_dset, config=config):
+def train(model, optimizer, train_dset, config=None):
     # Turn on training mode which enables dropout.
     model.train()
     criterion = nn.BCELoss()

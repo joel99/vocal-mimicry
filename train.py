@@ -12,7 +12,7 @@ from discriminators.common import train_dtor
 from transformer.new_train import train as train_gen
 
 from dataset import VCTK_Wrapper, \
-    Isvoice_Dataset_Real, Isvoice_Dataset_Fake, collate_pad_tensors,
+    Isvoice_Dataset_Real, Isvoice_Dataset_Fake, collate_pad_tensors,\
     Identity_Dataset_Real, Identity_Dataset_Fake, Generator_Dataset
 from torch.utils.data import DataLoader
 

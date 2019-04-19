@@ -31,7 +31,7 @@ The architecture/parameters of the current architecture are pulled mostly from
 import torch
 from torch import nn
 
-from common import fc_from_arch, convnet_from_arch
+from .common import fc_from_arch, convnet_from_arch
 
 
 def get_isvoice_discriminator(mel_channels,):

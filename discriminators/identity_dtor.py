@@ -31,7 +31,7 @@ import torch
 from torch import nn
 import math
 
-from common import fc_from_arch
+from .common import fc_from_arch
 
 
 def get_identity_discriminator(style_size):

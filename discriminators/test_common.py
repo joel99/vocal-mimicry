@@ -2,7 +2,7 @@
 Testing for everything in common file, whoulda thunk?
 """
 import pytest
-from common import *
+from .common import *
 
 @pytest.fixture
 def batch_size():

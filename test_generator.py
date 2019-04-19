@@ -15,4 +15,6 @@ loss = criterion(pred, out_target)
 print(loss)
 loss.backward()
 print(sum(map(lambda x: x.grad.detach().sum().abs(), list(model.parameters()))))
+from torchsummary import summary
+summary(model, [(4,2,8),(1,2,16)])
 print("Done")
