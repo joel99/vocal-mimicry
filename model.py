@@ -7,6 +7,9 @@ from discriminators.isvoice_dtor import get_isvoice_discriminator
 from discriminators.content_dtor import get_content_discriminator
 from discriminators.identity_dtor import get_identity_discriminator
 
+from embedding import embeddings
+
+
 
 def get_transformer(style_size, mel_size):
     """
@@ -30,8 +33,6 @@ def get_embedder(path='embedder/data/best_model', cuda = None):
 
     where network which takes a transformation of a speakers utterances (Batch Size x 1 x Features x Frames)
     """
-
-    from embedding import embeddings
 
     if path != None:
         embedding_size, num_classes = embeddings.parse_params(path)
