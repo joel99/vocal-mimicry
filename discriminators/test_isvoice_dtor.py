@@ -2,7 +2,7 @@
 Tests for everything in the identity_dtor file, whoulda thunk?
 """
 
-from isvoice_dtor import Isvoice_Discriminator
+from .isvoice_dtor import Isvoice_Discriminator
 import numpy as np
 import torch
 import pytest
@@ -36,7 +36,7 @@ def num_timesteps():
 @pytest.fixture
 def example_data(batch_size, num_timesteps, mel_size):
     return torch.from_numpy(np.zeros(
-        (batch_size, num_timesteps, mel_size))).float()
+        (batch_size, 1, num_timesteps, mel_size))).float()
 
 
 @pytest.fixture

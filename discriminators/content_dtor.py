@@ -31,12 +31,12 @@ def get_content_discriminator(mel_size):
 class Content_Discriminator(Isvoice_Discriminator):
     def forward(self, x, lengths):
         """
-        :i1: A (N, 2, T, M) dimensional tensor (representing many mel-grams)
+        :i1: A (N, 2, 1, T, M) dimensional tensor (representing many mel-grams)
 
         :returns: The probability tensor (size n) that inputs[n] same content
         """
 
-        assert (len(x.size()) == 4)
+        assert (len(x.size()) == 5)
         assert (x.size(1) == 2)
 
         i1 = x[:, 0, :]

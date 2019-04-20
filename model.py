@@ -7,6 +7,10 @@ from discriminators.isvoice_dtor import get_isvoice_discriminator
 from discriminators.content_dtor import get_content_discriminator
 from discriminators.identity_dtor import get_identity_discriminator
 
+from embedding import embeddings
+
+import warnings
+
 
 def get_transformer(style_size, mel_size):
     """
@@ -19,10 +23,23 @@ def get_transformer(style_size, mel_size):
     where S is the dimensionality of style vector and M is the number of
     mel-spectrogram channels
     """
-    raise NotImplementedError()
+    # TODO [DEBUG FEATURE] Remove when code is verified to "work"
+    # Literally delete all of the following code it exists only to
+    # allow me to continue debugging
+    class AwfulDebugStopgapModel(torch.nn.Module):
+        def __init__(self, mel_size):
+            super().__init__()
+            self.style_size = style_size
+            self.mel_size = mel_size
+            self.dummy_param = torch.nn.Parameter(torch.zeros(2, 3))
+        def forward(source_mel, target_style):
+            return torch.zeros((500, self.mel_size))
+
+    return AwfulDebugStopgapModel(mel_size)
 
 
-def get_embedder(path='embedder/data/best_model', cuda = None):
+
+def get_embedder_and_size(path='embedder/data/best_model', cuda=None):
     """
     Returns a embedding model captures the sytle of a speakers voice
 
@@ -31,14 +48,20 @@ def get_embedder(path='embedder/data/best_model', cuda = None):
     where network which takes a transformation of a speakers utterances (Batch Size x 1 x Features x Frames)
     """
 
-    from embedding import embeddings
+    embedder = None
+    embedding_size = 512
 
-    if path != None:
+    warnings.warn("Bypassing loading embedder!")
+
+    # TODO [DEBUG FEATURE] Remove when code is verified to "work"
+    if False and path != None:
         embedding_size, num_classes = embeddings.parse_params(path)
-        return embeddings.load_embedder(path, embedding_size, num_classes, cuda)
+        embedder = embeddings.load_embedder(path, embedding_size, num_classes, cuda)
     else:
         print("No Model Found, initializing random weights")
-        return embeddings.load_embedder()
+        embedder = embeddings.load_embedder()
+
+    return (embedder, embedding_size)
 
 
 class ProjectModel(torch.nn.Module):
@@ -49,7 +72,7 @@ class ProjectModel(torch.nn.Module):
         """
         super().__init__()
 
-        self.embedder, self.style_size = get_embedder()
+        self.embedder, self.style_size = get_embedder_and_size()
         self.mel_size = mel_size
 
         self.isvoice_dtor = get_isvoice_discriminator(self.mel_size)

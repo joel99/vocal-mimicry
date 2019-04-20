@@ -45,7 +45,7 @@ def coords_from_index(index, dimensions):
     return tuple(coords)
 
 
-def pad_tensor_list(tensor_list, pad_dim=0, pad_element=0):
+def pad_tensor_list(tensor_list, pad_dim, pad_element=0):
 
     dim_permutation = list(range(len(tensor_list[0].size())))
     dim_permutation[0] = pad_dim
@@ -80,7 +80,7 @@ def collate_pad_tensors(sample_list, pad_dim=0, pad_element=0):
     :pad_element: The element to pad with
     """
 
-    data_list = [d for d in sample_list]
+    data_list = [d[0] for d in sample_list]
     label_list = [d[1] for d in sample_list]
 
     padded_data, lengths = pad_tensor_list(data_list, pad_dim, pad_element)
@@ -92,16 +92,22 @@ class VCTK_Wrapper:
 
     MAX_NUM_PEOPLE = 150
     MAX_NUM_SAMPLES = 300
-    VCTK_MEL_ROOT = "data/mel/"
+    # VCTK_MEL_ROOT = "data/mel/"
     # For whatever reason, the ID of the first person is actually 225
-    STARTING_ID = 225
 
-    def __init__(self, embedder, num_people, num_samples):
+    # Actually use the following line please
+    # STARTING_ID = 225
+    # TODO Revert to the following line!!
+    STARTING_ID = 226
+
+    def __init__(self, embedder, num_people, num_samples,
+                 mel_root):
 
         assert (num_people <= self.MAX_NUM_PEOPLE)
         assert (num_samples <= self.MAX_NUM_SAMPLES)
         self.num_samples = num_samples
         self.num_people = num_people
+        self.mel_root = mel_root
 
         self.embedder = embedder
 
@@ -114,21 +120,22 @@ class VCTK_Wrapper:
         assert (sample_id <= self.num_samples)
 
         actual_id = self.STARTING_ID + person_id
-        np_mel = np.load(self.VCTK_MEL_ROOT + "/p" + str(actual_id) + "/p" +
-                         str(actual_id) + "_" + "{:03d}".format(sample_id) +
-                         ".npy")
-        return torch.from_numpy(np_mel)[None, :]
+        np_mel = np.load(self.mel_root + "p" + str(actual_id) + "/p" +
+                         str(actual_id) + "_" + "{:03d}".format(sample_id + 1) +
+                         ".npy").T
+        return (torch.from_numpy(np_mel)[None, :]).float()
 
     def _calculate_person_stylevecs(self, ):
         for pid in range(self.num_people):
             sample_stylevecs = [None] * self.num_samples
             for sid in range(self.num_samples):
-                sample_stylevecs[sid] = torch.from_numpy(
-                    self.embedder(self.mel_from_ids(pid, sid))[0])
-            sample_stylevecs = np.array(sample_stylevecs)
-            self.person_stylevecs[pid] = np.mean(sample_stylevecs, axis=0)
+                mel = self.mel_from_ids(pid, sid)[None, :]
+                sample_stylevecs[sid] = self.embedder(mel)
 
-        self.person_stylevecs = torch.from_numpy(self.person_stylevecs)
+            self.person_stylevecs[pid] = torch.mean(torch.stack(sample_stylevecs),
+                                                    dim=0)
+
+        self.person_stylevecs = torch.stack(self.person_stylevecs)
 
     def person_stylevec(self, pid):
         return self.person_stylevecs[pid]
@@ -153,7 +160,7 @@ class Generator_Dataset(ParallelAudioDataset):
 
     def __init__(self, wrapper):
         dims = (wrapper.num_people, wrapper.num_samples)
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
 
     def __getitem__(self, index):
         person_id, sample_id = coords_from_index(index, self.dims)
@@ -174,7 +181,7 @@ class Isvoice_Dataset_Real(ParallelAudioDataset):
             wrapper,
     ):
         dims = (wrapper.num_people, wrapper.num_samples)
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
 
     def __getitem__(self, index):
         person_id, sample_id = coords_from_index(index, self.dims)
@@ -198,7 +205,7 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
         possible transformations of each of files.
         """
         dims = (wrapper.num_people, wrapper.num_people, wrapper.num_samples)
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
         self.embedder = embedder
         self.transformer = transformer
 
@@ -240,7 +247,7 @@ class Identity_Dataset_Real(ParallelAudioDataset):
         possible transformations of each of files.
         """
         dims = (wrapper.num_people, wrapper.num_samples, wrapper.num_samples)
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
         self.embedder = embedder
 
     def __getitem__(self, index):
@@ -272,7 +279,7 @@ class Identity_Dataset_Fake(ParallelAudioDataset):
             wrapper.num_samples,
             wrapper.num_people - 1,
         )
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
         self.embedder = embedder
         self.transformer = transformer
 
@@ -304,7 +311,7 @@ class Content_Dataset_Real(ParallelAudioDataset):
             wrapper,
     ):
         dims = (wrapper.num_samples, wrapper.num_people, wrapper.num_people)
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
 
     def __getitem__(self, index):
         sid, p1id, p2id = coords_from_index(index, self.dims)
@@ -326,7 +333,7 @@ class Content_Dataset_Fake(ParallelAudioDataset):
     ):
         dims = (wrapper.num_people, wrapper.num_samples, wrapper.num_people,
                 wrapper.num_samples - 1)
-        super().__init__(self, dims)
+        super().__init__(wrapper, dims)
 
     def __getitem__(self, index):
         p1id, s1id, p2id, s2id = coords_from_index(index, self.dims)

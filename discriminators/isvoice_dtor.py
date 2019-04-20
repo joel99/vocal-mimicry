@@ -82,20 +82,19 @@ class Isvoice_Discriminator(nn.Module):
         Run a set of inputs through the net to determine whether it is a voice
 
         Arguments:
-            x (Variable): A tensor of size (N, T, M) where
+            x (Variable): A tensor of size (N, 1, T, M) where
                 N is the batch size
                 T is the number of timesteps
                 D is the dimenstionality of a timestep
             lengths: Integer torch tensor of size (N,) of unpadded lengths
         Returns:
-            A torch Tensor of size (1,) specifying the score for the given
-            example
+            A torch Tensor of size (N,) specifying the score for the given
+            examples
         '''
-        assert (len(x.size()) == 3)
+        assert (len(x.size()) == 4)
+        assert(x.size(1) == 1)
 
-        # Convnet wants an extra dimension for channels, which we dont use
-        extended_input = x[:, None, :]
-        after_conv = self.conv_layer.forward(extended_input)
+        after_conv = self.conv_layer.forward(x)
 
         after_max = pool_func(after_conv, dim=2)
         if type(after_max) == tuple:

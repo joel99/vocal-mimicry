@@ -57,7 +57,78 @@
     CLOSED: [2019-04-16 Tue 17:36]
 
 * Final todo stuff (Thursday)
-** Train style embedder [Arda]
 ** Load trained style embedder into ProjectModel
 ** Proper filename handling on checkpointers [Anish]
 ** Arda expects time in the WRONG axis
+
+* Todo items (friday night pow-wow)
+** TODO Proper filename handling on checkpoints
+*** Probably done?
+** TODO Axis compatibility between Anish/Joel/Arda/Alex
+** TODO [#A] Remove the embedder load bypass in model.py
+** TODO [#A] Remove the toy "transformer" in model.py/get_transformer
+** TODO [#A] Change the starting ID in dataset.py/VCTK... back to 225!
+** TODO [#A] Change the number of people in train.py back
+    to 150 or whatev
+** DONE Maybe automatically load the mel size from the .npy s?
+   CLOSED: [2019-04-20 Sat 13:40]
+** TODO Push the embedding commit to Alex's submodule
+
+** TODO [#B] Does embedder expect time on a give axis?
+** TODO [#A] Alex needs to fix following error
+
+  warnings.warn("Bypassing loading embedder!")
+No Model Found, initializing random weights
+Traceback (most recent call last):
+  File "train.py", line 186, in <module>
+    train()
+  File "train.py", line 146, in train
+    args.mel_root)
+  File "/home/anish/Code/vocal-mimicry/dataset.py", line 115, in __init__
+    self._calculate_person_stylevecs()
+  File "/home/anish/Code/vocal-mimicry/dataset.py", line 133, in _calculate_person_stylevecs
+    sample_stylevecs[sid] = torch.from_numpy(self.embedder(mel))
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/Code/vocal-mimicry/embedding/model.py", line 209, in forward
+    x = self.model.fc(x)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/linear.py", line 67, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/functional.py", line 1352, in linear
+    ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
+RuntimeError: size mismatch, m1: [1 x 13824], m2: [1024 x 512] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
+*** dataset.py/calculate_person_stylevecs
+** TODO [#A] Revert embedder in train.py (creation of VCTK Wrapper) to
+    actually do something!
+** DONE [#A] Anish, fix the following error
+   CLOSED: [2019-04-20 Sat 13:27]
+
+(ml) anish@anish-ubuntu:~/Code/vocal-mimicry$ python train.py --mel-size 30 --num-epochs 10 --dset-num-people 2 --dset-num-samples 5 --num-batches-dtor-isvoice 10 --batch-size-dtor-isvoice 10 --num-batches-tform 10 --batch-size-tform 10
+/home/anish/Code/vocal-mimicry/model.py:54: UserWarning: Bypassing loading embedder!
+  warnings.warn("Bypassing loading embedder!")
+No Model Found, initializing random weights
+Started Training at 2019-04-20 02:13:00.082727
+Traceback (most recent call last):
+  File "train.py", line 192, in <module>
+    train()
+  File "train.py", line 181, in train
+    args.num_batches_dtor_isvoice)
+  File "/home/anish/Code/vocal-mimicry/discriminators/common.py", line 207, in train_dtor
+    predictions = dtor(data, lengths).view(-1)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/Code/vocal-mimicry/discriminators/isvoice_dtor.py", line 104, in forward
+    return torch.sigmoid(self.fc_layer(flattened))
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/container.py", line 92, in forward
+    input = module(input)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/linear.py", line 67, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/functional.py", line 1352, in linear
+    ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
+RuntimeError: size mismatch, m1: [5 x 1188], m2: [54 x 1024] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
