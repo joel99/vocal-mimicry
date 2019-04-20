@@ -1,7 +1,7 @@
 """
 Tests for everything in the identity_dtor file, whoulda thunk?
 """
-from identity_dtor import Identity_Discriminator
+from .identity_dtor import Identity_Discriminator
 import numpy as np
 import pytest
 import torch

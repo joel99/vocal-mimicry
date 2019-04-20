@@ -1,7 +1,7 @@
 """
 Tests for everything in the identity_dtor file, whoulda thunk?
 """
-from content_dtor import get_content_discriminator
+from .content_dtor import get_content_discriminator
 import numpy as np
 import pytest
 import torch
@@ -35,7 +35,7 @@ def num_timesteps():
 @pytest.fixture
 def example_data(batch_size, num_timesteps, mel_size):
     return torch.from_numpy(np.zeros(
-        (batch_size, 2, num_timesteps, mel_size))).float()
+        (batch_size, 2, 1, num_timesteps, mel_size))).float()
 
 
 @pytest.fixture

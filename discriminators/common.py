@@ -193,7 +193,7 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
         raise TypeError("Invalid type for num_batches: " +
                         str(type(num_batches)))
 
-    for batch_index in range(len(max(num_real_batches, num_fake_batches))):
+    for batch_index in range(max(num_real_batches, num_fake_batches)):
 
         dtor.zero_grad()
         optimizer.zero_grad()
@@ -204,6 +204,7 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
         for loader, num_batches in cfgs:
             if batch_index < num_batches:
                 data, lengths, labels = next(iter(loader))
+                labels = labels.float()
                 predictions = dtor(data, lengths).view(-1)
                 err = criterion(predictions, labels)
                 err.backward()
