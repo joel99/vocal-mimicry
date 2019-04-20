@@ -43,23 +43,24 @@ def get_embedder_and_size(path='embedder/data/best_model', cuda=None):
     """
     Returns a embedding model captures the sytle of a speakers voice
 
-    returns (network, style_size)
+    returns (batch_size, style_size)
 
-    where network which takes a transformation of a speakers utterances (Batch Size x 1 x Features x Frames)
+    where network which takes a transformation of a speakers utterances (Batch Size x 1 x Frames x Features)
     """
 
     embedder = None
-    embedding_size = 512
+    embedding_load_embeddersize = 512
 
     warnings.warn("Bypassing loading embedder!")
 
     # TODO [DEBUG FEATURE] Remove when code is verified to "work"
-    if False and path != None:
-        embedding_size, num_classes = embeddings.parse_params(path)
-        embedder = embeddings.load_embedder(path, embedding_size, num_classes, cuda)
+    path = NoneFeatures
+    if path != None:
+        embedding_size, num_classes, num_features = embeddings.parse_params(path)
+        embedder = embeddings.load_embedder(path, embedding_size, num_classes, num_features, cuda, True)
     else:
         print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder()
+        embedder = embeddings.load_embedder(allow_permute=True)
 
     return (embedder, embedding_size)
 
@@ -79,7 +80,7 @@ class ProjectModel(torch.nn.Module):
         self.content_dtor = get_content_discriminator(self.mel_size)
         self.identity_dtor = get_identity_discriminator(self.style_size)
         self.transformer = get_transformer(self.style_size, self.mel_size)
-
+load_embedder
     def forward(self, target_style, source_mel):
         """
         :target_style: A (1 x S) tensor
