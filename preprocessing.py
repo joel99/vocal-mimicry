@@ -18,18 +18,23 @@ TODO:
 - Investigate own VAE [lstm encoder -> wavenet decoder]
 """
 
+fixed_mel = partial(melspectrogram, n_mels=80)
 def preprocess_wrap(embedder, name, in_dir, args):
     for root, _, files in tqdm(walk(in_dir)):
         out_root = root[root.find('wav48') + 6:]
         out_dir = join(args.out_dir, out_root)
         makedirs(out_dir, exist_ok=True)
         for name in files:
-            audio, _ = load(join(root, name), sr=None)
+            ext_pt = name.rfind('.')
+            name_stem = name[:ext_pt]
+            name_ext = name[ext_pt+1:]
+            if name_ext != 'wav':
+                continue
+            audio, _ = load(join(root, name), sr=None, duration=10.0)
             gram = embedder(y=audio, sr=args.fs).astype(np.float16)
-            name_stem = name[:name.rfind('.')]
             fn = '{}.npy'.format(name_stem)
             np.save(join(out_dir, fn), gram, allow_pickle=False)
-preprocess_mel = partial(preprocess_wrap, melspectrogram, 'mel')
+preprocess_mel = partial(preprocess_wrap, fixed_mel, 'mel')
 
 def if_wrap(y, sr):
     return ifgram(y,sr)[0]
