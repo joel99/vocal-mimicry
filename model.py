@@ -32,11 +32,10 @@ def get_transformer(style_size, mel_size):
             self.style_size = style_size
             self.mel_size = mel_size
             self.dummy_param = torch.nn.Parameter(torch.zeros(2, 3))
-        def forward(source_mel, target_style):
-            return torch.zeros((500, self.mel_size))
+        def forward(self, source_mel, target_style):
+            return torch.zeros((1, 500, self.mel_size))
 
     return AwfulDebugStopgapModel(mel_size)
-
 
 
 def get_embedder_and_size(path='embedder/data/best_model', cuda=None):

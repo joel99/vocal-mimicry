@@ -72,8 +72,8 @@
     to 150 or whatev
 ** DONE Maybe automatically load the mel size from the .npy s?
    CLOSED: [2019-04-20 Sat 13:40]
-** TODO Push the embedding commit to Alex's submodule
-
+** DONE Push the embedding commit to Alex's submodule
+   CLOSED: [2019-04-20 Sat 14:27]
 ** TODO [#B] Does embedder expect time on a give axis?
 ** TODO [#A] Alex needs to fix following error
 
@@ -132,3 +132,4 @@ Traceback (most recent call last):
   File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/functional.py", line 1352, in linear
     ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
 RuntimeError: size mismatch, m1: [5 x 1188], m2: [54 x 1024] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
+** TODO [#A]  Revert the isvoice_dtor to the actual architecture!

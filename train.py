@@ -156,6 +156,7 @@ def train():
     dset_isvoice_fake = Isvoice_Dataset_Fake(dset_wrapper,
                                              model.embedder,
                                              model.transformer)
+    dset_generator_train  = Generator_Dataset(dset_wrapper,)
     # We're enforcing identity via a resnet connection for now, so unused
     # dset_identity_real = Identity_Dataset_Real(dset_wrapper,
     #                                            embedder)

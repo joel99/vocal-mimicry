@@ -41,9 +41,14 @@ def get_isvoice_discriminator(mel_channels,):
 
     This model takes in inputs of (1 x T x M)
     """
-    conv_arch = [(7, 32, 2), (5, 64, None), (3, 128, None), (3, 256, 1)]
+
+    conv_arch = [(2, 32, 2)]
+    fc_arch = [5, 10, 2]
+    # TODO Uncomment th eofllowing two lines and delete the ones above!
+    # conv_arch = [(7, 32, 2), (5, 64, None), (3, 128, None), (3, 256, 1)]
+    # fc_arch = [1024, 256, 1024]
     return Isvoice_Discriminator(conv_arch=conv_arch,
-                                 fc_arch=[1024, 256, 1024],
+                                 fc_arch=fc_arch,
                                  slice_size=mel_channels)
 
 
