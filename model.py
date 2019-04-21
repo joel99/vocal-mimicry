@@ -7,7 +7,7 @@ from discriminators.isvoice_dtor import get_isvoice_discriminator
 from discriminators.content_dtor import get_content_discriminator
 from discriminators.identity_dtor import get_identity_discriminator
 
-from transfomer.mem_transformer import MemTransformer
+from transformer.mem_transformer import MemTransformer
 
 from embedding import embeddings
 

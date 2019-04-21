@@ -94,9 +94,9 @@ def train():
     # Setting up the constants #
     ############################
 
-    if args.save_dir is not "" and args.save_dir[-1] != "/":
+    if args.save_dir is not None and args.save_dir[-1] != "/":
         args.save_dir += "/"
-    if args.load_dir is not "" and args.load_dir[-1] != "/":
+    if args.load_dir is not None and args.load_dir[-1] != "/":
         args.load_dir += "/"
 
     SAVE_DTOR_ISVOICE = args.save_dir + FOLDER_DTOR_IV
@@ -128,7 +128,7 @@ def train():
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])
 
-    model = ProjectModel(config.transfomer, args.mel_size).to(device)
+    model = ProjectModel(config.transformer, args.mel_size).to(device)
     tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
                                        lr=args.lr_tform)
     tform_checkpointer = CheckpointManager(model.transformer,
@@ -148,7 +148,7 @@ def train():
     ###############################################
 
     # Load the checkpoint, if it is specified
-    if args.load_dir is not "":
+    if args.load_dir is not None:
         tform_md, tform_od = load_checkpoint(SAVE_TRANSFORMER)
         model.transformer.load_state_dict(tform_md)
         tform_optimizer.load_state_dict(tform_od)
