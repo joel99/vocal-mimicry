@@ -431,8 +431,7 @@ class RelPartialLearnableDecoderLayer(nn.Module):
 
 
 class AdaptiveEmbedding(nn.Module):
-    def __init__(self, n_token, d_embed, d_proj, cutoffs, div_val=1, 
-                 sample_softmax=False):
+    def __init__(self, n_token, d_embed, d_proj, cutoffs, div_val=1):
         super(AdaptiveEmbedding, self).__init__()
 
         self.n_token = n_token
@@ -450,7 +449,7 @@ class AdaptiveEmbedding(nn.Module):
         self.emb_projs = nn.ParameterList()
         if div_val == 1:
             self.emb_layers.append(
-                nn.Embedding(n_token, d_embed, sparse=sample_softmax>0)
+                nn.Embedding(n_token, d_embed)
             )
             if d_proj != d_embed:
                 self.emb_projs.append(nn.Parameter(torch.Tensor(d_proj, d_embed)))
@@ -493,32 +492,34 @@ class AdaptiveEmbedding(nn.Module):
         return embed
 
 class MemTransformer(nn.Module):
-    def __init__(self, n_layer, n_head, d_model, d_head, d_inner, d_style,
-                 dropout, dropatt, 
-                 div_val=1, pre_lnorm=False,
-                 tgt_len=None, ext_len=None, mem_len=None, 
-                 cutoffs=[], adapt_inp=False,
-                 same_length=False, attn_type=0, clamp_len=-1, 
-                 sample_softmax=-1):
+    def __init__(self, config):
         super(MemTransformer, self).__init__()
 
-        self.d_model = d_model
-        self.n_head = n_head
-        self.d_head = d_head
-        self.d_style = d_style
+        if "pre_lnorm" in config:
+            pre_lnorm = config["pre_lnorm"]
+        else:
+            pre_lnorm = False
+
+        dropout = config["dropout"]
+        dropatt = config["dropatt"]
+
+        self.d_model = config["d_model"]
+        self.n_head = config["n_head"]
+        self.d_head = config["d_head"]
+        self.d_style = config["d_style"]
 
         self.style2adain = nn.Linear(self.d_style, 2 * self.d_model)
 
         self.drop = nn.Dropout(dropout)
 
-        self.n_layer = n_layer
+        self.n_layer = config["n_layer"]
 
-        self.tgt_len = tgt_len
-        self.mem_len = mem_len
-        self.ext_len = ext_len
-        self.max_klen = tgt_len + ext_len + mem_len
+        self.tgt_len = config["tgt_len"]
+        self.mem_len = config["mem_len"]
+        self.ext_len = config["ext_len"]
+        self.max_klen = sum([self.tgt_len, self.mem_len, self.ext_len])
 
-        self.attn_type = attn_type
+        self.attn_type = config["attn_type"]
 
         self.layers = nn.ModuleList()
         if attn_type == 0: # the default attention
@@ -526,7 +527,7 @@ class MemTransformer(nn.Module):
                 self.layers.append(
                     RelPartialLearnableDecoderLayer(
                         n_head, d_model, d_head, d_inner, dropout,
-                        tgt_len=tgt_len, ext_len=ext_len, mem_len=mem_len,
+                        tgt_len=self.tgt_len, ext_len=self.ext_len, mem_len=self.mem_len,
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
         elif attn_type == 1: # learnable embeddings
@@ -534,7 +535,7 @@ class MemTransformer(nn.Module):
                 self.layers.append(
                     RelLearnableDecoderLayer(
                         n_head, d_model, d_head, d_inner, dropout,
-                        tgt_len=tgt_len, ext_len=ext_len, mem_len=mem_len,
+                        tgt_len=self.tgt_len, ext_len=self.ext_len, mem_len=self.mem_len,
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
         elif attn_type in [2, 3]: # absolute embeddings
@@ -545,8 +546,8 @@ class MemTransformer(nn.Module):
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
 
-        self.same_length = same_length
-        self.clamp_len = clamp_len
+        self.same_length = config["same_len"]
+        self.clamp_len = config["clamp_len"]
 
         self._create_params()
 
@@ -715,55 +716,3 @@ class MemTransformer(nn.Module):
         pred_hid = hidden[-self.tgt_len:]
 
         return pred_hid
-
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(description='unit test')
-
-    parser.add_argument('--n_layer', type=int, default=4, help='')
-    parser.add_argument('--n_rel_layer', type=int, default=4, help='')
-    parser.add_argument('--n_head', type=int, default=2, help='')
-    parser.add_argument('--d_head', type=int, default=2, help='')
-    parser.add_argument('--d_model', type=int, default=200, help='')
-    parser.add_argument('--d_embed', type=int, default=200, help='')
-    parser.add_argument('--d_inner', type=int, default=200, help='')
-    parser.add_argument('--dropout', type=float, default=0.0, help='')
-    parser.add_argument('--cuda', action='store_true', help='')
-    parser.add_argument('--seed', type=int, default=1111, help='')
-    parser.add_argument('--multi_gpu', action='store_true', help='')
-
-    args = parser.parse_args()
-
-    device = torch.device("cuda" if args.cuda else "cpu")
-
-    B = 4
-    tgt_len, mem_len, ext_len = 36, 36, 0
-    data_len = tgt_len * 20
-    args.n_token = 10000
-
-    import data_utils
-
-    data = torch.LongTensor(data_len*B).random_(0, args.n_token).to(device)
-    diter = data_utils.LMOrderedIterator(data, B, tgt_len, device=device, ext_len=ext_len)
-
-    cutoffs = [args.n_token // 2]
-    tie_projs = [False] + [True] * len(cutoffs)
-
-    for div_val in [1, 2]:
-        for d_embed in [200, 100]:
-            model = MemTransformerLM(args.n_token, args.n_layer, args.n_head,
-                            args.d_model, args.d_head, args.d_inner, args.dropout,
-                            dropatt=args.dropout, tie_weight=True, 
-                            d_embed=d_embed, div_val=div_val, 
-                            tie_projs=tie_projs, pre_lnorm=True,
-                            tgt_len=tgt_len, ext_len=ext_len, mem_len=mem_len, 
-                            cutoffs=cutoffs, attn_type=0).to(device)
-
-            print(sum(p.numel() for p in model.parameters()))
-
-            mems = tuple()
-            for idx, (inp, tgt, seqlen) in enumerate(diter):
-                print('batch {}'.format(idx))
-                out = model(inp, tgt, *mems)
-                mems = out[1:]

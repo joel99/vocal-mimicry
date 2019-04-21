@@ -7,12 +7,14 @@ from discriminators.isvoice_dtor import get_isvoice_discriminator
 from discriminators.content_dtor import get_content_discriminator
 from discriminators.identity_dtor import get_identity_discriminator
 
+from transfomer.mem_transformer import MemTransformer
+
 from embedding import embeddings
 
 import warnings
 
 
-def get_transformer(style_size, mel_size):
+def get_transformer(config):
     """
     Returns a neural network which takes a stylevector (1 x S) tensor
     and audiosample (1 x T x M) and returns another (1 x T x M) tensor
@@ -23,22 +25,7 @@ def get_transformer(style_size, mel_size):
     where S is the dimensionality of style vector and M is the number of
     mel-spectrogram channels
     """
-    # TODO [DEBUG FEATURE] Remove when code is verified to "work"
-    # Literally delete all of the following code it exists only to
-    # allow me to continue debugging
-    class AwfulDebugStopgapModel(torch.nn.Module):
-        def __init__(self, mel_size):
-            super().__init__()
-            self.style_size = style_size
-            self.mel_size = mel_size
-            self.dummy_param = torch.nn.Parameter(torch.zeros(2, 3))
-        def forward(self, source_mel, target_style):
-            # Source mel has size (N x 1 x T x M), the model should return in
-            # this format too
-            return torch.zeros(source_mel.size())
-
-    return AwfulDebugStopgapModel(mel_size)
-
+    return MemTransformer(config)
 
 def get_embedder_and_size(path='embedder/data/best_model', cuda=None):
     """

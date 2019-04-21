@@ -6,6 +6,22 @@ dataset:
 model:
   dummy: 0
 
+transformer:
+  pre_lnorm: False
+  dropout: 0.5
+  dropatt: 0.5
+  d_model: 100
+  n_head: 10
+  d_head: 100
+  d_style: 100
+  n_layer: 10
+  tgt_len: 200
+  mem_len: 200
+  ext_len: 200
+  attn_type: 0
+  same_len: True
+  clamp_len: -1
+
 # Optimization related arguments
 solver:
   batch_size: 32
