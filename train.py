@@ -2,6 +2,7 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import yaml
+import json
 import argparse
 
 from utils.checkpointing import CheckpointManager, load_checkpoint
@@ -27,47 +28,65 @@ def train():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--verbose', default=0, type=int,
-                        help='[DUMMY] Does nothing currently')
-    parser.add_argument('--mel-root', default='data/taco/', type=str,
-                        help='Path to the directory (include last /) where the person mel folders are')
-    parser.add_argument('--cpu-workers', type=int, default=1,
+    parser.add_argument('--config-json', type=str,
+                        help="The json file specifying the args below")
+
+    group_chk = parser.add_argument_group('checkpointing')
+    group_chk.add_argument('--epoch-save-interval', type=int,
+                        help="After every [x] epochs save w/"
+                           + "checkpoint manager")
+    group_chk.add_argument('--save-dir', type=str,
+                        help="Relative path of save directory, "
+                           + "include the trailing /")
+    group_chk.add_argument("--load-dir", type=str,
+                        help="Checkpoint prefix directory to "
+                           + "load initial model from")
+
+    group_system = parser.add_argument_group('system')
+    group_system.add_argument('--cpu-workers', type=int,
                         help="Number of CPU workers for dataloader")
-    parser.add_argument('--torch-seed', type=int, default=0,
+    group_system.add_argument('--torch-seed', type=int,
                         help="Seed for for torch and torch_cudnn")
-    parser.add_argument('--gpu-ids', default=-1,
+    group_system.add_argument('--gpu-ids',
                 help="The GPU ID to use. If -1, use CPU")
-    parser.add_argument('--mel-size', default=128, type=int,
-                help="[DUMMY] The number of channels in the mel-gram")
-    parser.add_argument('--num-epochs', required=True, type=int,
+
+    group_data = parser.add_argument_group('data')
+    group_data.add_argument('--mel-size', type=int,
+                            help="[DUMMY] Number of channels in the mel-gram")
+    group_data.add_argument('--dset-num-people', type=int,
+                            help="If using VCTK, an integer under 150")
+    group_data.add_argument('--dset-num-samples', type=int,
+                            help="If using VCTK, an integer under 300")
+    group_data.add_argument('--mel-root', default='data/taco/', type=str,
+                            help='Path to the directory (include last /) '
+                            + 'where the person mel folders are')
+
+    group_training = parser.add_argument_group('training')
+    group_training.add_argument('--num-epochs', type=int,
                 help="The number of epochs to train for")
-    parser.add_argument('--dset-num-people', type=int, required=True,
-                        help="If using VCTK, an integer under 150")
-    parser.add_argument('--dset-num-samples', type=int, required=True,
-                        help="If using VCTK, an integer under 300")
+    group_training.add_argument('--lr-dtor-isvoice', type=float, )
+    group_training.add_argument('--lr-tform', type=float, )
 
-    parser.add_argument('--lr-dtor-isvoice', type=float, default=0.001)
-    parser.add_argument('--lr-tform', type=float, default=0.001)
+    group_training.add_argument('--num-batches-dtor-isvoice', type=int,)
+    group_training.add_argument('--batch-size-dtor-isvoice', type=int,)
 
-    parser.add_argument('--num-batches-dtor-isvoice', type=int, required=True)
-    parser.add_argument('--batch-size-dtor-isvoice', type=int, required=True)
+    group_training.add_argument('--num-batches-tform', type=int,)
+    group_training.add_argument('--batch-size-tform', type=int,)
 
-    parser.add_argument('--num-batches-tform', type=int, required=True)
-    parser.add_argument('--batch-size-tform', type=int, required=True)
 
-    # Checkpoint-related arguments #
-    parser.add_argument('--epoch-save-interval', type=int, default=5,
-                        help="After every [x] epochs save w/ checkpoint manager")
-    parser.add_argument('--save-dir', type=str, default="checkpoints/",
-                        help="Relative path of save directory, include the trailing /")
-    parser.add_argument("--load-dir", type=str, default="",
-                        help="Checkpoint prefix directory to load initial model from")
-
-    # Model-related arguments #
-    parser.add_argument('--isvoice-mode', default='norm',
-                        help='One of [norm, cos, nn]')
+    group_model = parser.add_argument_group('model')
+    group_model.add_argument('--isvoice-mode',
+                             help='One of [norm, cos, nn]')
 
     args = parser.parse_args()
+    if args.config_json is not None:
+        with open(args.config_json) as json_file:
+            file_args = json.load(json_file)
+        cli_dict = vars(args)
+        for key in cli_dict:
+            if cli_dict[key] is not None:
+                file_args[key] = cli_dict[key]
+        args.__dict__ = file_args
 
     config = yaml.full_load("configs/basic.yml")
 
@@ -104,7 +123,7 @@ def train():
     # Initialize the model and related optimizers #
     ###############################################
 
-    if args.load_dir is "":
+    if args.load_dir is None:
         start_epoch = 0
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])

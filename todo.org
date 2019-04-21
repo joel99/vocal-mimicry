@@ -161,3 +161,4 @@ Traceback (most recent call last):
   File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/functional.py", line 1352, in linear
     ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
 RuntimeError: size mismatch, m1: [1 x 4096], m2: [1024 x 512] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
+** TODO The "isvoice-mode" parameter does absolutely nothing
