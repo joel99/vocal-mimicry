@@ -101,13 +101,14 @@ class VCTK_Wrapper:
     STARTING_ID = 226
 
     def __init__(self, embedder, num_people, num_samples,
-                 mel_root):
+                 mel_root, device):
 
         assert (num_people <= self.MAX_NUM_PEOPLE)
         assert (num_samples <= self.MAX_NUM_SAMPLES)
         self.num_samples = num_samples
         self.num_people = num_people
         self.mel_root = mel_root
+        self.device = device
 
         self.embedder = embedder
 
@@ -123,7 +124,7 @@ class VCTK_Wrapper:
         np_mel = np.load(self.mel_root + "p" + str(actual_id) + "/p" +
                          str(actual_id) + "_" + "{:03d}".format(sample_id + 1) +
                          ".npy").T
-        return (torch.from_numpy(np_mel)[None, :]).float()
+        return (torch.from_numpy(np_mel)[None, :]).float().to(self.device)
 
     def _calculate_person_stylevecs(self, ):
         for pid in range(self.num_people):

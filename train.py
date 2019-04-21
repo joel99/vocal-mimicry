@@ -89,6 +89,8 @@ def train():
     torch.cuda.manual_seed_all(args.torch_seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+    # TODO Enable?
+    # torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
     #############################
     # Setting up Pytorch device #
@@ -105,7 +107,7 @@ def train():
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])
 
-    model = ProjectModel(args.mel_size)
+    model = ProjectModel(args.mel_size,).to(device)
     tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
                                        lr=args.lr_tform)
     tform_checkpointer = CheckpointManager(model.transformer,
@@ -146,7 +148,8 @@ def train():
         # args.dset_num_people,
         1,
         args.dset_num_samples,
-        args.mel_root
+        args.mel_root,
+        device,
     )
 
     if args.mel_size != dset_wrapper.mel_from_ids(0, 0).size()[-1]:

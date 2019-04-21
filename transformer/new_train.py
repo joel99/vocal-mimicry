@@ -9,8 +9,9 @@ def evaluate(model, val_dset, config=None):
 
     total_loss = 0
     for data, style in tqdm(val_dset, desc="Generator evaluation."):
-        data, style = data.to(model.device), style.to(model.device)
-        pred = model(data, style)
+        # data, style = data.to(model.device), style.to(model.device)
+        data = data[:, None, :]
+        pred = model(style, data)
         ones_v = torch.ones(pred.size()).float()
         mel, is_voice, content, identity = pred
         loss = criterion(is_voice, ones_v) \
@@ -27,9 +28,10 @@ def train(model, optimizer, train_dset, config=None):
 
     pbar = tqdm(train_dset, desc="Generator training", unit="batch")
     for data, style in pbar:
-        data, style = data.to(model.device), style.to(model.device)
+        # data, style = data.to(model.device), style.to(model.device)
+        data = data[:, None, :]
         model.zero_grad()
-        pred = model(data, style)
+        pred = model(style, data)
         mel, is_voice, content, identity = pred
         ones_v = torch.ones(is_voice.size()).float()
         loss = criterion(is_voice, ones_v) + \

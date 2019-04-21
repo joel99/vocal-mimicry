@@ -81,8 +81,8 @@ class ProjectModel(torch.nn.Module):
 
     def forward(self, target_style, source_mel):
         """
-        :target_style: A (1 x S) tensor
-        :input_audio: A (1 x T x M) tensor
+        :target_style: An (N x S) tensor
+        :input_audio: A (N x 1 x T x M) tensor
 
         returns the tuple (out_audio, isvoice_prob,
         samecontent_prob, targetperson_prob)

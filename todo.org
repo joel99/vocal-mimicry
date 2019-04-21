@@ -133,3 +133,5 @@ Traceback (most recent call last):
     ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
 RuntimeError: size mismatch, m1: [5 x 1188], m2: [54 x 1024] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
 ** TODO [#A]  Revert the isvoice_dtor to the actual architecture!
+** TODO [#A] In train.py, set default tensor type to cuda.floattensor?
+** TODO [#A] In new_train.py, I'm slicing None at the right index?
