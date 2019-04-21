@@ -93,7 +93,10 @@ class ProjectModel(torch.nn.Module):
         """
 
         transformed_mel = self.transformer(source_mel, target_style)
+
+        print("Got here, and transformed_mel size is: ", transformed_mel.size())
         transformed_style = self.embedder(transformed_mel)
+        print("If I got here, problem isn't with the embedder")
 
         isvoice_prob = self.isvoice_dtor(transformed_mel)
         content_prob = self.content_dtor(torch.stack((source_mel,
