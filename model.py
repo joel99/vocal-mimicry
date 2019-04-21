@@ -63,7 +63,7 @@ def get_embedder_and_size(mel_size,
 
 
 class ProjectModel(torch.nn.Module):
-    def __init__(self, mel_size):
+    def __init__(self, config, mel_size):
         """
         :style_size: The size of the stylevector produced by embedder
         :mel_size: The number of frequency channels in the mel-cepstrogram
@@ -73,10 +73,13 @@ class ProjectModel(torch.nn.Module):
         self.mel_size = mel_size
         self.embedder, self.style_size = get_embedder_and_size(self.mel_size)
 
+        config["d_model"] = self.mel_size
+        config["d_style"] = self.style_size
+
         self.isvoice_dtor = get_isvoice_discriminator(self.mel_size)
         self.content_dtor = get_content_discriminator(self.mel_size)
         self.identity_dtor = get_identity_discriminator(self.style_size)
-        self.transformer = get_transformer(self.style_size, self.mel_size)
+        self.transformer = get_transformer(config)
 
     def forward(self, target_style, source_mel):
         """

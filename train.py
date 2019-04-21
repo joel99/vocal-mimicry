@@ -69,6 +69,8 @@ def train():
 
     args = parser.parse_args()
 
+    config = yaml.full_load("configs/basic.yml")
+
     ############################
     # Setting up the constants #
     ############################
@@ -107,7 +109,7 @@ def train():
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])
 
-    model = ProjectModel(args.mel_size,).to(device)
+    model = ProjectModel(config.transfomer, args.mel_size).to(device)
     tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
                                        lr=args.lr_tform)
     tform_checkpointer = CheckpointManager(model.transformer,
