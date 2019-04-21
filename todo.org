@@ -75,7 +75,8 @@
 ** DONE Push the embedding commit to Alex's submodule
    CLOSED: [2019-04-20 Sat 14:27]
 ** TODO [#B] Does embedder expect time on a give axis?
-** TODO [#A] Alex needs to fix following error
+** DONE [#A] Alex needs to fix following error
+   CLOSED: [2019-04-20 Sat 22:54]
 
   warnings.warn("Bypassing loading embedder!")
 No Model Found, initializing random weights
@@ -135,3 +136,28 @@ RuntimeError: size mismatch, m1: [5 x 1188], m2: [54 x 1024] at /pytorch/aten/sr
 ** TODO [#A]  Revert the isvoice_dtor to the actual architecture!
 ** TODO [#A] In train.py, set default tensor type to cuda.floattensor?
 ** TODO [#A] In new_train.py, I'm slicing None at the right index?
+** TODO [#A] [Alex] Some ShapeError within the embedder code?
+Traceback (most recent call last):
+  File "train.py", line 200, in <module>
+    train()
+  File "train.py", line 196, in train
+    val_loss = train_gen(model, tform_optimizer, dset_generator_train)
+  File "/home/anish/Code/vocal-mimicry/transformer/new_train.py", line 34, in train
+    pred = model(style, data)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/Code/vocal-mimicry/model.py", line 98, in forward
+    transformed_style = self.embedder(transformed_mel)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/Code/vocal-mimicry/embedding/embeddings.py", line 152, in forward
+    return self.model.forward(x)
+  File "/home/anish/Code/vocal-mimicry/embedding/model.py", line 212, in forward
+    x = self.model.fc(x)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/modules/linear.py", line 67, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "/home/anish/venv/ml/lib/python3.6/site-packages/torch/nn/functional.py", line 1352, in linear
+    ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
+RuntimeError: size mismatch, m1: [1 x 4096], m2: [1024 x 512] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
