@@ -40,7 +40,8 @@ def get_transformer(style_size, mel_size):
     return AwfulDebugStopgapModel(mel_size)
 
 
-def get_embedder_and_size(path='embedder/data/best_model', cuda=None):
+def get_embedder_and_size(mel_size,
+                          path='embedder/data/best_model', cuda=None):
     """
     Returns a embedding model captures the sytle of a speakers voice
 
@@ -56,11 +57,20 @@ def get_embedder_and_size(path='embedder/data/best_model', cuda=None):
 
     # TODO [DEBUG FEATURE] Remove when code is verified to "work"
     if False and path != None:
-        embedding_size, num_classes = embeddings.parse_params(path)
-        embedder = embeddings.load_embedder(path, embedding_size, num_classes, cuda)
+        embedding_size, num_classes, num_features = embeddings.parse_params(path)
+        embedder = embeddings.load_embedder(checkpoint_path=path,
+                                            embedding_size=embedding_size,
+                                            num_classes=num_classes,
+                                            cuda=cuda,
+                                            num_features=mel_size,
+        )
     else:
         print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder()
+        embedder = embeddings.load_embedder(
+            embedding_size=embedding_size,
+            cuda=cuda,
+            num_features=mel_size,
+        )
 
     return (embedder, embedding_size)
 
@@ -73,8 +83,8 @@ class ProjectModel(torch.nn.Module):
         """
         super().__init__()
 
-        self.embedder, self.style_size = get_embedder_and_size()
         self.mel_size = mel_size
+        self.embedder, self.style_size = get_embedder_and_size(self.mel_size)
 
         self.isvoice_dtor = get_isvoice_discriminator(self.mel_size)
         self.content_dtor = get_content_discriminator(self.mel_size)
