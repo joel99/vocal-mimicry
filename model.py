@@ -32,9 +32,9 @@ def get_embedder_and_size(mel_size,
     """
     Returns a embedding model captures the sytle of a speakers voice
 
-    returns (network, style_size)
+    returns (Batch Size, style_size)
 
-    where network which takes a transformation of a speakers utterances (Batch Size x 1 x Features x Frames)
+    where network which takes a transformation of a speakers utterances (Batch Size x 1 x Frames x Features)
     """
 
     embedder = None
@@ -44,20 +44,19 @@ def get_embedder_and_size(mel_size,
 
     # TODO [DEBUG FEATURE] Remove when code is verified to "work"
     if False and path != None:
-        embedding_size, num_classes, num_features = embeddings.parse_params(path)
+        embedding_size, num_classes, num_features, num_frames = embeddings.parse_params(path)
         embedder = embeddings.load_embedder(checkpoint_path=path,
                                             embedding_size=embedding_size,
                                             num_classes=num_classes,
                                             cuda=cuda,
-                                            num_features=mel_size,
+                                            num_features=num_features,
+                                            frame_dim=num_frames,
+                                            require_audio_path=False,
+                                            permute=True
         )
     else:
         print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder(
-            embedding_size=embedding_size,
-            cuda=cuda,
-            num_features=mel_size,
-        )
+        embedder = embeddings.load_embedder(embedding_size = embedding_size, require_audio_path=False, permute=True)
 
     return (embedder, embedding_size)
 
