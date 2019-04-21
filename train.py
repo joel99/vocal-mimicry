@@ -29,7 +29,7 @@ def train():
 
     parser.add_argument('--verbose', default=0, type=int,
                         help='[DUMMY] Does nothing currently')
-    parser.add_argument('--mel-root', default='data/mel/', type=str,
+    parser.add_argument('--mel-root', default='data/taco/', type=str,
                         help='Path to the directory (include last /) where the person mel folders are')
     parser.add_argument('--cpu-workers', type=int, default=1,
                         help="Number of CPU workers for dataloader")
