@@ -33,7 +33,9 @@ def get_transformer(style_size, mel_size):
             self.mel_size = mel_size
             self.dummy_param = torch.nn.Parameter(torch.zeros(2, 3))
         def forward(self, source_mel, target_style):
-            return torch.zeros((1, 500, self.mel_size))
+            # Source mel has size (N x 1 x T x M), the model should return in
+            # this format too
+            return torch.zeros(source_mel.size())
 
     return AwfulDebugStopgapModel(mel_size)
 
