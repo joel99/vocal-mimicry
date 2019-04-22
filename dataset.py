@@ -231,8 +231,14 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
             source_pid, source_sid = coords_from_index(index, self.dims)
         source_audio = self.wrapper.mel_from_ids(source_pid, source_sid)[None,:]
 
-        print("Source_audio size is: ", source_audio.size())
         stylevec = self.wrapper.person_stylevec(style_pid)
+
+        # TODO Delete the following two lines!!
+        stylevec = torch.cat((stylevec, stylevec))
+        source_audio = torch.cat((source_audio, source_audio))
+
+
+        print("Source_audio size is: ", source_audio.size())
         print("Style vector size is: ", stylevec.size())
 
         fake_sample = self.transformer(source_audio, stylevec)
