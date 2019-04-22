@@ -121,10 +121,10 @@ class VCTK_Wrapper:
         assert (sample_id <= self.num_samples)
 
         actual_id = self.STARTING_ID + person_id
-        np_mel = np.load(self.mel_root + "p" + str(actual_id) + "/p" +
+        mel = torch.load(self.mel_root + "p" + str(actual_id) + "/p" +
                          str(actual_id) + "_" + "{:03d}".format(sample_id + 1) +
-                         ".npy").T
-        return (torch.from_numpy(np_mel)[None, :]).float().to(self.device)
+                         ".pt").t()
+        return (mel[None, :]).float().to(self.device)
 
     def _calculate_person_stylevecs(self, ):
         for pid in range(self.num_people):
