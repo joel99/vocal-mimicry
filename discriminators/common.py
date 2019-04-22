@@ -201,12 +201,15 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
         cfgs = [(real_loader, num_real_batches,),
                 (fake_loader, num_fake_batches,)]
 
+        index = 0
         for loader, num_batches in cfgs:
+            print("Starting cfg ", index)
             if batch_index < num_batches:
                 data, lengths, labels = next(iter(loader))
                 labels = labels.float()
                 predictions = dtor(data, lengths).view(-1)
                 err = criterion(predictions, labels)
                 err.backward()
+            index += 1
 
         optimizer.step()

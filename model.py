@@ -16,9 +16,10 @@ import warnings
 
 def get_transformer(config):
     """
-    Returns a neural network which takes a stylevector (1 x S) tensor
-    and audiosample (1 x T x M) and returns another (1 x T x M) tensor
-    representing the output mel
+    Returns a neural network which takes a stylevector (N x S) tensor
+    and audiosample (N x 1 x T x M) and returns another (N x 1 x T x M) tensor
+    representing the output mel. (Where audiosample i has been transformed to
+    have style stylevector[i])
 
     Neural net should extend pytorch.module so it can be easily checkpointed?
 

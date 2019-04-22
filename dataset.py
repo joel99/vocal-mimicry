@@ -53,6 +53,10 @@ def pad_tensor_list(tensor_list, pad_dim, pad_element=0):
 
     tensor_list = [t.permute(dim_permutation) for t in tensor_list]
 
+    print("Sizes of tensors passed to collate_fn")
+    for t in tensor_list:
+        print(t.size())
+
     for d in tensor_list:
         if not (d.size()[1:] == tensor_list[0].size()[1:]):
             raise RuntimeError("Probably forgot to call with correct pad_dim")
@@ -167,6 +171,7 @@ class Generator_Dataset(ParallelAudioDataset):
         person_id, sample_id = coords_from_index(index, self.dims)
         style = self.wrapper.person_stylevec(np.random.randint(0, self.wrapper.num_people))
         mel = self.wrapper.mel_from_ids(person_id, sample_id)
+        print("Generator_Dataset __getitem__ returning item of size: ", mel.size())
         return mel, style
 
 class Isvoice_Dataset_Real(ParallelAudioDataset):
@@ -186,7 +191,10 @@ class Isvoice_Dataset_Real(ParallelAudioDataset):
 
     def __getitem__(self, index):
         person_id, sample_id = coords_from_index(index, self.dims)
-        return self.wrapper.mel_from_ids(person_id, sample_id), 1
+        ret = self.wrapper.mel_from_ids(person_id, sample_id)
+        print("    IsVoice_Real __getitem__ is returning tensor w/ size",
+              ret.size())
+        return ret, 1
 
 
 class Isvoice_Dataset_Fake(ParallelAudioDataset):
@@ -218,11 +226,15 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
         """
         style_pid, \
             source_pid, source_sid = coords_from_index(index, self.dims)
-        source_audio = self.wrapper.mel_from_ids(source_pid, source_sid)
+        source_audio = self.wrapper.mel_from_ids(source_pid, source_sid)[None,:]
+
+        print("Source_audio size is: ", source_audio.size())
 
         stylevec = self.wrapper.person_stylevec(style_pid)
         fake_sample = self.transformer(source_audio, stylevec)
-        return fake_sample, 0
+        print("    IsVoice_Fake __getitem__ is returning tensor w/ size",
+              fake_sample.size())
+        return fake_sample[0], 0
 
 
 class Identity_Dataset_Real(ParallelAudioDataset):
@@ -255,13 +267,16 @@ class Identity_Dataset_Real(ParallelAudioDataset):
 
         pid, sid1, sid2 = coords_from_index(index, self.dims)
 
-        a1_mel = self.wrapper.mel_from_ids(pid, sid1)
-        a2_mel = self.wrapper.mel_from_ids(pid, sid2)
+        a1_mel = self.wrapper.mel_from_ids(pid, sid1)[None, :]
+        a2_mel = self.wrapper.mel_from_ids(pid, sid2)[None, :]
 
-        s1_stylevec = self.embedder(a1_mel)
-        s2_stylevec = self.embedder(a2_mel)
+        s1_stylevec = self.embedder(a1_mel)[0]
+        s2_stylevec = self.embedder(a2_mel)[0]
 
-        return torch.from_numpy(np.array([s1_stylevec, s2_stylevec])), 1
+        ret = np.array([s1_stylevec, s2_stylevec])
+        print("Identity_Dataset_Real __getitem__ returning with size: ",
+              ret.size())
+        return torch.from_numpy(), 1
 
 
 class Identity_Dataset_Fake(ParallelAudioDataset):
@@ -289,13 +304,18 @@ class Identity_Dataset_Fake(ParallelAudioDataset):
         if style_pid >= source_pid:
             style_pid += 1
 
-        source_mel = self.wrapper.mel_from_ids(source_pid, source_sid)
+        source_mel = self.wrapper.mel_from_ids(source_pid,
+                                               source_sid)[None, :]
 
         stylevec = self.wrapper.person_stylevec(source_pid)
         transformed_mel = self.transformer(source_mel, stylevec)
-        transformed_stylevec = self.embedder(transformed_mel)
+        transformed_stylevec = self.embedder(transformed_mel)[0]
 
-        return torch.from_numpy(np.array([stylevec, transformed_stylevec])), 0
+        ret = torch.from_numpy(np.array([stylevec, transformed_stylevec]))
+        print("Identity_Dataset_Fake __getitem__ returning with size: ",
+              ret.size())
+
+        return ret, 0
 
 
 class Content_Dataset_Real(ParallelAudioDataset):
