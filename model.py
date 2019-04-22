@@ -57,7 +57,7 @@ def get_embedder_and_size(mel_size,
         )
     else:
         print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder(embedding_size = embedding_size, require_audio_path=False, permute=True)
+        embedder = embeddings.load_embedder(embedding_size = embedding_size)
 
     return (embedder, embedding_size)
 

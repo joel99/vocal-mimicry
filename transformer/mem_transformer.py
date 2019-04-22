@@ -712,11 +712,11 @@ class MemTransformer(nn.Module):
         return core_out, new_mems
 
     def forward(self, data, style):
-        data = data.permute(1, 0, 2)
+        data = data.reshape(data.size(0), data.size(2), data.size(3)).permute(1, 0, 2)
         hidden, new_mems = self._forward(data, self.style2adain(style))
 
         pred_hid = hidden[-self.tgt_len:]
-        pred_hid = pred_hid.permute(1, 0, 2)
+        pred_hid = pred_hid.permute(1, 0, 2).unsqueeze(1)
         pred_hid = data + pred_hid
 
         return pred_hid
