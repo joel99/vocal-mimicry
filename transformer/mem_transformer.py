@@ -504,6 +504,7 @@ class MemTransformer(nn.Module):
         dropatt = config["dropatt"]
 
         self.d_model = config["d_model"]
+        self.d_inner = config["d_inner"]
         self.n_head = config["n_head"]
         self.d_head = config["d_head"]
         self.d_style = config["d_style"]
@@ -522,27 +523,27 @@ class MemTransformer(nn.Module):
         self.attn_type = config["attn_type"]
 
         self.layers = nn.ModuleList()
-        if attn_type == 0: # the default attention
-            for i in range(n_layer):
+        if self.attn_type == 0: # the default attention
+            for i in range(self.n_layer):
                 self.layers.append(
                     RelPartialLearnableDecoderLayer(
-                        n_head, d_model, d_head, d_inner, dropout,
+                        self.n_head, self.d_model, self.d_head, self.d_inner, dropout,
                         tgt_len=self.tgt_len, ext_len=self.ext_len, mem_len=self.mem_len,
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
-        elif attn_type == 1: # learnable embeddings
-            for i in range(n_layer):
+        elif self.attn_type == 1: # learnable embeddings
+            for i in range(self.n_layer):
                 self.layers.append(
                     RelLearnableDecoderLayer(
-                        n_head, d_model, d_head, d_inner, dropout,
+                        self.n_head, self.d_model, self.d_head, self.d_inner, dropout,
                         tgt_len=self.tgt_len, ext_len=self.ext_len, mem_len=self.mem_len,
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
-        elif attn_type in [2, 3]: # absolute embeddings
-            for i in range(n_layer):
+        elif self.attn_type in [2, 3]: # absolute embeddings
+            for i in range(self.n_layer):
                 self.layers.append(
                     DecoderLayer(
-                        n_head, d_model, d_head, d_inner, dropout,
+                        self.n_head, self.d_model, self.d_head, self.d_inner, dropout,
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
 
@@ -711,8 +712,10 @@ class MemTransformer(nn.Module):
         return core_out, new_mems
 
     def forward(self, data, style):
+        data = data.reshape(data.size(0), data.size(2), data.size(3)).transpose(1, 0, 2)
         hidden, new_mems = self._forward(data, self.style2adain(style))
 
         pred_hid = hidden[-self.tgt_len:]
+        pred_hid = pred_hid.transpose(1, 0, 2).unsqueeze(1)
 
         return pred_hid
