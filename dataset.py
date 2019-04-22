@@ -69,7 +69,10 @@ def pad_tensor_list(tensor_list, pad_dim, pad_element=0):
     for index, d in enumerate(tensor_list):
         padded_data[index][:lengths[index]] = d
 
-    return padded_data.permute([0] + [a + 1 for a in dim_permutation]), \
+    ret = padded_data.permute([0] + [a + 1 for a in dim_permutation])
+    print("Collate function is returning tensor of size: ", ret.size())
+
+    return ret, \
         torch.tensor(lengths)
 
 
@@ -229,12 +232,15 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
         source_audio = self.wrapper.mel_from_ids(source_pid, source_sid)[None,:]
 
         print("Source_audio size is: ", source_audio.size())
-
         stylevec = self.wrapper.person_stylevec(style_pid)
+        print("Style vector size is: ", stylevec.size())
+
         fake_sample = self.transformer(source_audio, stylevec)
+        print("The fake sample generated is size: ", fake_sample.size())
+        ret = fake_sample[0]
         print("    IsVoice_Fake __getitem__ is returning tensor w/ size",
-              fake_sample.size())
-        return fake_sample[0], 0
+              ret.size())
+        return ret, 0
 
 
 class Identity_Dataset_Real(ParallelAudioDataset):

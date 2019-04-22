@@ -203,8 +203,10 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
 
         index = 0
         for loader, num_batches in cfgs:
-            print("Starting cfg ", index)
+            print("\n Starting cfg ", index)
+            print("=====================================")
             if batch_index < num_batches:
+                print("About to load batch: ", batch_index)
                 data, lengths, labels = next(iter(loader))
                 labels = labels.float()
                 predictions = dtor(data, lengths).view(-1)
