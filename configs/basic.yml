@@ -11,6 +11,7 @@ transformer:
   dropout: 0.5
   dropatt: 0.5
   d_model: 100
+  d_inner: 50
   n_head: 10
   d_head: 100
   d_style: 100

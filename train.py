@@ -88,7 +88,8 @@ def train():
                 file_args[key] = cli_dict[key]
         args.__dict__ = file_args
 
-    config = yaml.full_load("configs/basic.yml")
+    with open("configs/basic.yml") as f:
+        config = yaml.full_load(f)
 
     ############################
     # Setting up the constants #
@@ -128,7 +129,7 @@ def train():
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])
 
-    model = ProjectModel(config.transformer, args.mel_size).to(device)
+    model = ProjectModel(config["transformer"], args.mel_size).to(device)
     tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
                                        lr=args.lr_tform)
     tform_checkpointer = CheckpointManager(model.transformer,

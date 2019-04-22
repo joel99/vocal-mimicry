@@ -645,7 +645,7 @@ class MemTransformer(nn.Module):
                 core_out = layer(core_out, pos_emb, self.r_w_bias,
                         self.r_r_bias, dec_attn_mask=dec_attn_mask, mems=mems_i)
                 mn, sd = core_out.mean(0, True), core_out.std(0, True) + 1e-8
-                core_out = (((core_out - mn) / sd) * style[:, :, self.d_model:]) + style[:, :, :self.d_model]
+                core_out = (((core_out - mn) / sd) * style[:, self.d_model:]) + style[:, :self.d_model]
                 hids.append(core_out)
         elif self.attn_type == 1: # learnable
             core_out = self.drop(data)
@@ -661,7 +661,7 @@ class MemTransformer(nn.Module):
                 core_out = layer(core_out, r_emb, self.r_w_bias[i],
                         r_bias, dec_attn_mask=dec_attn_mask, mems=mems_i)
                 mn, sd = core_out.mean(0), core_out.std(0)
-                core_out = (((core_out - mn) / sd) * style[:, :, d_model:]) + style[:, :, :d_model]
+                core_out = (((core_out - mn) / sd) * style[:, d_model:]) + style[:, :d_model]
                 hids.append(core_out)
         elif self.attn_type == 2: # absolute
             pos_seq = torch.arange(klen - 1, -1, -1.0, device=data.device,
@@ -680,7 +680,7 @@ class MemTransformer(nn.Module):
                 core_out = layer(core_out, dec_attn_mask=dec_attn_mask,
                                  mems=mems_i)
                 mn, sd = core_out.mean(0), core_out.std(0)
-                core_out = (((core_out - mn) / sd) * style[:, :, d_model:]) + style[:, :, :d_model]
+                core_out = (((core_out - mn) / sd) * style[:, d_model:]) + style[:, :d_model]
                 hids.append(core_out)
         elif self.attn_type == 3:
             core_out = self.drop(data)
@@ -702,7 +702,7 @@ class MemTransformer(nn.Module):
                 core_out = layer(core_out, dec_attn_mask=dec_attn_mask,
                                  mems=mems_i)
                 mn, sd = core_out.mean(0), core_out.std(0)
-                core_out = (((core_out - mn) / sd) * style[:, :, d_model:]) + style[:, :, :d_model]
+                core_out = (((core_out - mn) / sd) * style[:, d_model:]) + style[:, :d_model]
                 hids.append(core_out)
 
         core_out = self.drop(core_out)
@@ -712,10 +712,11 @@ class MemTransformer(nn.Module):
         return core_out, new_mems
 
     def forward(self, data, style):
-        data = data.reshape(data.size(0), data.size(2), data.size(3)).transpose(1, 0, 2)
+        data = data.permute(1, 0, 2)
         hidden, new_mems = self._forward(data, self.style2adain(style))
 
         pred_hid = hidden[-self.tgt_len:]
-        pred_hid = pred_hid.transpose(1, 0, 2).unsqueeze(1)
+        pred_hid = pred_hid.permute(1, 0, 2)
+        pred_hid = data + pred_hid
 
         return pred_hid

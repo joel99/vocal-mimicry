@@ -82,7 +82,8 @@ def main():
     valid_methods = ["mel", "if", "taco"]
     parser.add_argument(
         "--method", default=valid_methods[2],
-        help="Preprocessing method to use (np, mel, listener)."
+        help="Preprocessing method to use.",
+        choices=valid_methods
     )
 
     parser.add_argument(
