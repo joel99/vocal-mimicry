@@ -22,6 +22,19 @@ class SoundDataset(Dataset):
         full_path = join(self.source_dir, self.filenames[index])
         return torch.from_numpy(np.load(full_path))
 
+def torch_allisfinite(x):
+    return torch.sum(torch_isnotfinite(x).view(-1)) == 0
+
+def torch_isnotfinite(x):
+    """
+    Quick pytorch test that there are no nan's or infs.
+
+    note: torch now has torch.isnan
+    url: https://gist.github.com/wassname/df8bc03e60f81ff081e1895aabe1f519
+    """
+    not_inf = ((x + 1) != x)
+    not_nan = (x == x)
+    return 1 - (not_inf & not_nan)
 
 ######################################################################
 
@@ -126,7 +139,13 @@ class VCTK_Wrapper:
         mel = torch.load(self.mel_root + "p" + str(actual_id) + "/p" +
                          str(actual_id) + "_" + "{:03d}".format(sample_id + 1) +
                          ".pt").t()
-        return (mel[None, :]).float().to(self.device)
+        # TODO Maybe harcoding this isn't the greatest idea?
+        mel = mel.astype(np.float32)
+        mel = torch.from_numpy(mel)
+        ret = (mel[None, :]).float().to(self.device)
+        if not torch_allisfinite(mel):
+            raise RuntimeError("Encountered non-finite data")
+        return ret
 
     def _calculate_person_stylevecs(self, ):
         for pid in range(self.num_people):
@@ -222,11 +241,19 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
         style_pid, \
             source_pid, source_sid = coords_from_index(index, self.dims)
         source_audio = self.wrapper.mel_from_ids(source_pid, source_sid)[None,:]
-
         stylevec = self.wrapper.person_stylevec(style_pid)
+
+        if not torch_allisfinite(source_audio):
+            raise RuntimeError("Source audio isn't finite!")
+        if not torch_allisfinite(stylevec):
+            raise RuntimeError("Style vector isn't finite")
 
         fake_sample = self.transformer(source_audio, stylevec)
         ret = fake_sample[0]
+
+        if not torch_allisfinite(fake_sample):
+            raise RuntimeError("Transformed audio isn't finite!")
+
         return ret, 0
 
 
