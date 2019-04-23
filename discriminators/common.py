@@ -11,27 +11,6 @@ import numpy as np
 import torch
 
 
-def reformat_data(data):
-    """
-    Given some data, reformat it so that it corresponds to the specification
-    below. Rewrite this function as needed (should probably never be more than
-    a few lines) depending on how data is passed in from previous module
-
-    The input data is to be formatted as follows: an (T x N x D) matrix where
-        T: The number of timesteps per data
-        N: The batch size
-        D: Datum dimenstionality
-    """
-    # TODO Ensure that the data is being correctly formatted
-    if torch.is_tensor(data):
-        return data
-    elif type(data) == np.ndarray:
-        return torch.from_numpy(data)
-    else:
-        raise RuntimeError("Unknown data format")
-
-    return data
-
 
 def convnet_from_arch(mel_size, arch):
     """
@@ -52,8 +31,6 @@ def convnet_from_arch(mel_size, arch):
 
     layers = []
 
-    # TODO If the function is ever changed to accept data with more than one
-    # channel then this hardcoded variable needs to be updated
     curr_channel_size = 1
     curr_mel_dim = mel_size
 
@@ -122,8 +99,10 @@ def convnet_from_arch(mel_size, arch):
         # If mel_pool_size is within one of mel_dim, set it to mel_dim
         # But if it's too big, then we have issues
         if mel_pool_size > curr_mel_dim + 1:
-            raise RuntimeError("Off by greater than one, probably should " +
-                               "make sure that clipping is correct here")
+            raise RuntimeError("(mel_pool_size, curr_mel_dim) = "
+                               + str((mel_pool_size, curr_mel_dim))
+                               + "\nOff by greater than one, probably should "
+                               + "make sure that clipping is correct here")
         elif (abs(mel_pool_size - curr_mel_dim) <= 1) \
              or (mel_pool_size == -1):
             mel_pool_size = curr_mel_dim

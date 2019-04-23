@@ -28,8 +28,7 @@ def get_transformer(config):
     """
     return MemTransformer(config)
 
-def get_embedder_and_size(mel_size,
-                          path='embedder/data/best_model', cuda=None):
+def get_embedder_and_size(mel_size, path=None, cuda=None):
     """
     Returns a embedding model captures the sytle of a speakers voice
 
@@ -43,27 +42,27 @@ def get_embedder_and_size(mel_size,
 
     warnings.warn("Bypassing loading embedder!")
 
-    # TODO [DEBUG FEATURE] Remove when code is verified to "work"
-    if False and path != None:
+    if path != None:
         embedding_size, num_classes, num_features, num_frames = embeddings.parse_params(path)
-        embedder = embeddings.load_embedder(checkpoint_path=path,
-                                            embedding_size=embedding_size,
-                                            num_classes=num_classes,
-                                            cuda=cuda,
-                                            num_features=num_features,
-                                            frame_dim=num_frames,
-                                            require_audio_path=False,
-                                            permute=True
+        embedder = embeddings.load_embedder(
+            checkpoint_path=path,
+            embedding_size=embedding_size,
+            require_audio_path=False,
+            permute=True
         )
     else:
         print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder(embedding_size = embedding_size, require_audio_path=False, permute=True)
+        embedder = embeddings.load_embedder(
+            embedding_size=embedding_size,
+            require_audio_path=False,
+            permute=True
+        )
 
     return (embedder, embedding_size)
 
 
 class ProjectModel(torch.nn.Module):
-    def __init__(self, config, mel_size):
+    def __init__(self, config, mel_size, identity_mode):
         """
         :style_size: The size of the stylevector produced by embedder
         :mel_size: The number of frequency channels in the mel-cepstrogram
@@ -78,7 +77,8 @@ class ProjectModel(torch.nn.Module):
 
         self.isvoice_dtor = get_isvoice_discriminator(self.mel_size)
         self.content_dtor = get_content_discriminator(self.mel_size)
-        self.identity_dtor = get_identity_discriminator(self.style_size)
+        self.identity_dtor = get_identity_discriminator(self.style_size,
+                                                        identity_mode=identity_mode)
         self.transformer = get_transformer(config)
 
     def forward(self, target_style, source_mel):

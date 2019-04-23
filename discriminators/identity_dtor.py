@@ -34,7 +34,7 @@ import math
 from .common import fc_from_arch
 
 
-def get_identity_discriminator(style_size):
+def get_identity_discriminator(style_size, identity_mode):
     """
     Return a network which takes two voice samples and returns the
     probability that they are the same person
@@ -43,7 +43,7 @@ def get_identity_discriminator(style_size):
     """
     return Identity_Discriminator(
         style_size,
-        mode='norm',
+        mode=identity_mode,
     )
 
 

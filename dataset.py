@@ -107,13 +107,8 @@ class VCTK_Wrapper:
 
     MAX_NUM_PEOPLE = 150
     MAX_NUM_SAMPLES = 300
-    # VCTK_MEL_ROOT = "data/mel/"
     # For whatever reason, the ID of the first person is actually 225
-
-    # Actually use the following line please
-    # STARTING_ID = 225
-    # TODO Revert to the following line!!
-    STARTING_ID = 226
+    STARTING_ID = 225
 
     def __init__(self, embedder, num_people, num_samples,
                  mel_root, device):
@@ -236,7 +231,6 @@ class Isvoice_Dataset_Fake(ParallelAudioDataset):
 
     def __getitem__(self, index):
         """
-        # TODO Actually integrate this with the generator
         # TODO Work on some sort of caching if there are speed/memory issues,
             as I imagine there will be...
         """

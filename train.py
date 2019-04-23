@@ -31,6 +31,10 @@ def train():
     parser.add_argument('--config-json', type=str,
                         help="The json file specifying the args below")
 
+    parser.add_argument('--embedder-path', type=str,
+                        help="Path to the embedder checkpoint."
+                        + " Example: 'embedder/data/best_model'")
+
     group_chk = parser.add_argument_group('checkpointing')
     group_chk.add_argument('--epoch-save-interval', type=int,
                         help="After every [x] epochs save w/"
@@ -75,7 +79,7 @@ def train():
 
 
     group_model = parser.add_argument_group('model')
-    group_model.add_argument('--isvoice-mode',
+    group_model.add_argument('--identity-mode',
                              help='One of [norm, cos, nn]')
 
     args = parser.parse_args()
@@ -129,7 +133,8 @@ def train():
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])
 
-    model = ProjectModel(config["transformer"], args.mel_size).to(device)
+    model = ProjectModel(config["transformer"], args.mel_size,
+                         identity_mode=args.identity_mode).to(device)
     tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
                                        lr=args.lr_tform)
     tform_checkpointer = CheckpointManager(model.transformer,
@@ -164,9 +169,7 @@ def train():
 
     dset_wrapper = VCTK_Wrapper(
         model.embedder,
-        # TODO Use the following line!!! and delete the 1...
-        # args.dset_num_people,
-        1,
+        args.dset_num_people,
         args.dset_num_samples,
         args.mel_root,
         device,
