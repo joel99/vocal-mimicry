@@ -208,7 +208,7 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
                 labels = labels.float()
                 predictions = dtor(data, lengths).view(-1)
                 err = criterion(predictions, labels)
-                err.backward()
+                err.backward(retain_graph=True)
             index += 1
 
         optimizer.step()

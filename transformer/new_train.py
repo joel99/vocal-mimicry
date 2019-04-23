@@ -36,7 +36,7 @@ def train(model, optimizer, train_dset, config=None):
         ones_v = torch.ones(is_voice.size()).float()
         loss = criterion(is_voice, ones_v) + \
             criterion(content, ones_v) + criterion(identity, ones_v)
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
         pbar.set_postfix({"loss": loss})
 

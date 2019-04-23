@@ -136,6 +136,7 @@ class VCTK_Wrapper:
         assert (sample_id <= self.num_samples)
 
         actual_id = self.STARTING_ID + person_id
+        #mel = np.load(self.mel_root + "p" + str(actual_id) + "/p" + str(actual_id) + "_" + "{:03d}".format(sample_id + 1) + ".npy").T
         mel = torch.load(self.mel_root + "p" + str(actual_id) + "/p" +
                          str(actual_id) + "_" + "{:03d}".format(sample_id + 1) +
                          ".pt").t()
