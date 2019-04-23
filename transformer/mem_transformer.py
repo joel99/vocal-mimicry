@@ -723,7 +723,10 @@ class MemTransformer(nn.Module):
         if len(style.shape) == 2:
             style = style.unsqueeze(0)
         data_shape = data.size()
-        new_data = data.reshape(data_shape[0] * data_shape[1], data_shape[2], data_shape[3]).permute(1, 0, 2)
+        if len(data.shape) == 4:
+            new_data = data.reshape(data_shape[0] * data_shape[1], data_shape[2], data_shape[3]).permute(1, 0, 2)
+        else:
+            new_data = data
         self.reset_length(data_shape[2], data_shape[2], data_shape[2])
         hidden, new_mems = self._forward(new_data, self.style2adain(style))
 

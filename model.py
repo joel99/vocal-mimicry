@@ -94,12 +94,13 @@ class ProjectModel(torch.nn.Module):
 
         transformed_mel = self.transformer(source_mel, target_style)
         transformed_style = self.embedder(transformed_mel)
+        transformed_style = transformed_style.reshape(target_style.shape)
 
         isvoice_prob = self.isvoice_dtor(transformed_mel, None)
         # content_prob = self.content_dtor(torch.stack((source_mel,
         #                                               transformed_mel),
         #                                              dim=1), None)
-        identity_prob = self.identity_dtor(torch.stack((target_style,
+        identity_prob = self.identity_dtor(torch.cat((target_style,
                                                         transformed_style),
                                                        dim=1), None)
 
