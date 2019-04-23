@@ -521,6 +521,9 @@ class MemTransformer(nn.Module):
         self.max_klen = sum([self.tgt_len, self.mem_len, self.ext_len])
 
         self.attn_type = config["attn_type"]
+        print("Transformer Parameters:")
+        for k, v in config.items():
+            print("{}: {}".format(k, v))
 
         self.layers = nn.ModuleList()
         if self.attn_type == 0: # the default attention
@@ -644,7 +647,9 @@ class MemTransformer(nn.Module):
                 mems_i = None if mems is None else mems[i]
                 core_out = layer(core_out, pos_emb, self.r_w_bias,
                         self.r_r_bias, dec_attn_mask=dec_attn_mask, mems=mems_i)
-                mn, sd = core_out.mean(0, True), core_out.std(0, True) + 1e-8
+                mn, sd = core_out.mean(0, True), core_out.std(0, True)
+                if sd.abs().sum() < 1e-5:
+                    sd += 1e-5
                 core_out = (((core_out - mn) / sd) * style[:, self.d_model:]) + style[:, :self.d_model]
                 hids.append(core_out)
         elif self.attn_type == 1: # learnable
@@ -680,6 +685,8 @@ class MemTransformer(nn.Module):
                 core_out = layer(core_out, dec_attn_mask=dec_attn_mask,
                                  mems=mems_i)
                 mn, sd = core_out.mean(0), core_out.std(0)
+                if sd.abs().sum() < 1e-5:
+                    sd += 1e-5
                 core_out = (((core_out - mn) / sd) * style[:, d_model:]) + style[:, :d_model]
                 hids.append(core_out)
         elif self.attn_type == 3:

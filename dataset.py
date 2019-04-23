@@ -140,8 +140,10 @@ class VCTK_Wrapper:
                          str(actual_id) + "_" + "{:03d}".format(sample_id + 1) +
                          ".pt").t()
         # TODO Maybe harcoding this isn't the greatest idea?
-        mel = mel.astype(np.float32)
-        mel = torch.from_numpy(mel)
+        if isinstance(mel, np.ndarray):
+            mel = mel.astype(np.float32)
+            mel = torch.from_numpy(mel)
+        assert isinstance(mel, torch.Tensor)
         ret = (mel[None, :]).float().to(self.device)
         if not torch_allisfinite(mel):
             raise RuntimeError("Encountered non-finite data")
