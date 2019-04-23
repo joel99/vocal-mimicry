@@ -11,8 +11,9 @@
     "dset_num_people": 2,
     "dset_num_samples": 3,
     "mel_root": "default/taco",
+    "embedder_path": null,
 
-    "isvoice_mode": "norm",
+    "identity_mode": "norm",
 
     "num_epochs": 2,
 
