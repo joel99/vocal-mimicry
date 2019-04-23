@@ -37,26 +37,24 @@ def get_embedder_and_size(mel_size, path=None, cuda=None):
     where network which takes a transformation of a speakers utterances (Batch Size x 1 x Frames x Features)
     """
 
-    embedder = None
-    embedding_size = 512
-
-    warnings.warn("Bypassing loading embedder!")
-
     if path != None:
         embedding_size, num_classes, num_features, num_frames = embeddings.parse_params(path)
+        if mel_size != num_features:
+            warnings.warn("Mel Features and number of features for embedder do not match")
+        
+        
         embedder = embeddings.load_embedder(
             checkpoint_path=path,
             embedding_size=embedding_size,
-            require_audio_path=False,
-            permute=True
+            num_classes=num_classes,
+            num_features=num_features
+            frame_dim=num_frames
         )
+
     else:
+        warnings.warn("Bypassing loading embedder!")
         print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder(
-            embedding_size=embedding_size,
-            require_audio_path=False,
-            permute=True
-        )
+        embedder = embeddings.load_embedder()
 
     return (embedder, embedding_size)
 
