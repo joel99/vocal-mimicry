@@ -101,7 +101,8 @@ Traceback (most recent call last):
     ret = torch.addmm(torch.jit._unwrap_optional(bias), input, weight.t())
 RuntimeError: size mismatch, m1: [1 x 13824], m2: [1024 x 512] at /pytorch/aten/src/TH/generic/THTensorMath.cpp:940
 *** dataset.py/calculate_person_stylevecs
-** TODO [#A] Revert embedder in train.py (creation of VCTK Wrapper) to
+** DONE [#A] Revert embedder in train.py (creation of VCTK Wrapper) to
+   CLOSED: [2019-04-22 Mon 22:32]
     actually do something!
 ** DONE [#A] Anish, fix the following error
    CLOSED: [2019-04-20 Sat 13:27]

@@ -163,9 +163,7 @@ def train():
     ##########################
 
     dset_wrapper = VCTK_Wrapper(
-        # TODO Actually use the embedder instead of returning random vector...
-        # model.embedder,
-        lambda x: torch.rand(x.size(0), 512),
+        model.embedder,
         # TODO Use the following line!!! and delete the 1...
         # args.dset_num_people,
         1,
