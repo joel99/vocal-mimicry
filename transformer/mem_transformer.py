@@ -615,6 +615,7 @@ class MemTransformer(nn.Module):
 
     def _forward(self, data, style, mems=None):
         qlen, bsz, channels = data.size()
+        style = style.permute(1, 0 ,2)
 
         mlen = mems[0].size(0) if mems is not None else 0
         klen = mlen + qlen
@@ -650,7 +651,7 @@ class MemTransformer(nn.Module):
                 mn, sd = core_out.mean(0, True), core_out.std(0, True)
                 if sd.abs().sum() < 1e-5:
                     sd += 1e-5
-                core_out = (((core_out - mn) / sd) * style[:, self.d_model:]) + style[:, :self.d_model]
+                core_out = (((core_out - mn) / sd) * style[:, :, self.d_model:]) + style[:, :, :self.d_model]
                 hids.append(core_out)
         elif self.attn_type == 1: # learnable
             core_out = self.drop(data)
@@ -719,6 +720,8 @@ class MemTransformer(nn.Module):
         return core_out, new_mems
 
     def forward(self, data, style):
+        if len(style.shape) == 2:
+            style = style.unsqueeze(0)
         data_shape = data.size()
         new_data = data.reshape(data_shape[0] * data_shape[1], data_shape[2], data_shape[3]).permute(1, 0, 2)
         self.reset_length(data_shape[2], data_shape[2], data_shape[2])
@@ -727,5 +730,6 @@ class MemTransformer(nn.Module):
         pred_hid = hidden[-self.tgt_len:]
         pred_hid = pred_hid.permute(1, 0, 2).unsqueeze(1)
         pred_hid = data + pred_hid
+        print("Transformer output shape: {}".format(pred_hid.shape))
 
         return pred_hid
