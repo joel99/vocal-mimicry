@@ -196,6 +196,9 @@ def train():
     dload_isvoice_fake = DataLoader(dset_isvoice_fake,
                                     batch_size=args.batch_size_dtor_isvoice,
                                     collate_fn=collate_along_timeaxis)
+    dload_generator = DataLoader(dset_generator_train,
+                                 batch_size=args.batch_size_tform,
+                                 collate_fn=Generator_Dataset.collate_fn)
 
     #######################################################
     # The actual training loop gaaah what a rollercoaster #
@@ -216,7 +219,7 @@ def train():
         ################
         # (G) Update Generator
         ################
-        val_loss = train_gen(model, tform_optimizer, dset_generator_train)
+        val_loss = train_gen(model, tform_optimizer, dload_generator)
         tform_checkpointer.step()
 
 if __name__ == "__main__":

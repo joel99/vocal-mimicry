@@ -27,15 +27,14 @@ def train(model, optimizer, train_dset, config=None):
     criterion = nn.BCELoss()
 
     pbar = tqdm(train_dset, desc="Generator training", unit="batch")
-    for data, style in pbar:
-        # data, style = data.to(model.device), style.to(model.device)
-        data = data[:, None, :]
+    for data, lengths, style in pbar:
+        print("Input Mel shape is: ", type(data), data.size())
+        print("Style shape is: ", type(style), style.size())
         model.zero_grad()
-        pred = model(style, data)
-        mel, is_voice, content, identity = pred
+        pred = model(data, style)
+        mel, is_voice, identity = pred
         ones_v = torch.ones(is_voice.size()).float()
-        loss = criterion(is_voice, ones_v) + \
-            criterion(content, ones_v) + criterion(identity, ones_v)
+        loss = criterion(is_voice, ones_v) + criterion(identity, ones_v)
         loss.backward(retain_graph=True)
         optimizer.step()
         pbar.set_postfix({"loss": loss})

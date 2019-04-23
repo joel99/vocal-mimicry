@@ -177,3 +177,4 @@ RuntimeError: size mismatch, m1: [1 x 4096], m2: [1024 x 512] at /pytorch/aten/s
 ** DONE Make sure that hardcoding np.float32 in VCTKWrapper/mel_from_ids
    CLOSED: [2019-04-22 Mon 23:54]
     doesn't break anything else!
+** TODO num-batches-tform parameter is ignored

@@ -76,12 +76,12 @@ class ProjectModel(torch.nn.Module):
         config["d_style"] = self.style_size
 
         self.isvoice_dtor = get_isvoice_discriminator(self.mel_size)
-        self.content_dtor = get_content_discriminator(self.mel_size)
+        # self.content_dtor = get_content_discriminator(self.mel_size)
         self.identity_dtor = get_identity_discriminator(self.style_size,
                                                         identity_mode=identity_mode)
         self.transformer = get_transformer(config)
 
-    def forward(self, target_style, source_mel):
+    def forward(self, source_mel, target_style):
         """
         :target_style: An (N x S) tensor
         :input_audio: A (N x 1 x T x M) tensor
@@ -93,17 +93,14 @@ class ProjectModel(torch.nn.Module):
         """
 
         transformed_mel = self.transformer(source_mel, target_style)
-
-        print("Got here, and transformed_mel size is: ", transformed_mel.size())
         transformed_style = self.embedder(transformed_mel)
-        print("If I got here, problem isn't with the embedder")
 
         isvoice_prob = self.isvoice_dtor(transformed_mel, None)
-        content_prob = self.content_dtor(torch.stack((source_mel,
-                                                      transformed_mel),
-                                                     dim=1), None)
+        # content_prob = self.content_dtor(torch.stack((source_mel,
+        #                                               transformed_mel),
+        #                                              dim=1), None)
         identity_prob = self.identity_dtor(torch.stack((target_style,
                                                         transformed_style),
                                                        dim=1), None)
 
-        return transformed_mel, isvoice_prob, content_prob, identity_prob
+        return transformed_mel, isvoice_prob, identity_prob

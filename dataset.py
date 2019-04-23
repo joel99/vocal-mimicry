@@ -186,7 +186,17 @@ class Generator_Dataset(ParallelAudioDataset):
         person_id, sample_id = coords_from_index(index, self.dims)
         style = self.wrapper.person_stylevec(np.random.randint(0, self.wrapper.num_people))
         mel = self.wrapper.mel_from_ids(person_id, sample_id)
+
         return mel, style
+
+    def collate_fn(datalist):
+        source_mels = [d[0] for d in datalist]
+        target_styles = [d[1] for d in datalist]
+
+        collated_mels, lengths = pad_tensor_list(source_mels, pad_dim=1)
+        target_styles = torch.stack(target_styles)
+
+        return collated_mels, lengths, target_styles
 
 class Isvoice_Dataset_Real(ParallelAudioDataset):
     """
