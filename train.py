@@ -219,7 +219,8 @@ def train():
         ################
         # (G) Update Generator
         ################
-        val_loss = train_gen(model, tform_optimizer, dload_generator)
+        val_loss = train_gen(model, tform_optimizer, dload_generator,
+                             num_batches=args.num_batches_tform)
         tform_checkpointer.step()
 
 if __name__ == "__main__":

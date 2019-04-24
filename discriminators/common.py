@@ -163,6 +163,11 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
 
     criterion = nn.BCELoss()
 
+    if num_batches is None:
+        assert(real_loader.batch_size == fake_loader.batch_size)
+        lreal = len(real_loader)
+        lfake = len(fake_loader)
+        num_batches = int(min(lreal, lfake) / real_loader.batch_size)
     if isinstance(num_batches, int):
         num_real_batches = num_batches
         num_fake_batches = num_batches
