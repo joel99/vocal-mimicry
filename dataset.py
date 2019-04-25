@@ -108,7 +108,8 @@ class VCTK_Wrapper:
     MAX_NUM_PEOPLE = 150
     MAX_NUM_SAMPLES = 300
     # For whatever reason, the ID of the first person is actually 225
-    STARTING_ID = 225
+    # Person 225 sucks
+    STARTING_ID = 226
 
     def __init__(self, embedder, num_people, num_samples,
                  mel_root, device):
