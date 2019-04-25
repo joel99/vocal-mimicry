@@ -120,10 +120,10 @@ if __name__ == "__main__":
 
     # TODO [Arda] Change the following four params to whatever they should be
     # (in fact pdense_root_dir should probably be under /tmp)
-    raw_root_dir = "data/raw/VCTK-Corpus/wav48/"
+    raw_root_dir = "data/taco/"
     pdense_root_dir = "data/dense_people_mels/"
     output_root_dir = "data/dense_mels/"
-    file_extension = ".wav"
+    file_extension = ".pt"
 
 
     # Shouldnt need to change any of the following

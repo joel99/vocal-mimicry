@@ -136,7 +136,7 @@ def fc_from_arch(input_dim, output_dim, hidden_list):
     return nn.Sequential(*layers)
 
 
-def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
+def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches, device):
     """
     Most of this code is stripped shamelelssly from
     https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
@@ -189,6 +189,9 @@ def train_dtor(dtor, optimizer, real_loader, fake_loader, num_batches):
         for loader, num_batches in cfgs:
             if batch_index < num_batches:
                 data, lengths, labels = next(iter(loader))
+                data = data.to(device)
+                lengths = lengths.to(device)
+                labels = labels.to(device)
                 labels = labels.float()
                 predictions = dtor(data, lengths).view(-1)
                 err = criterion(predictions, labels)

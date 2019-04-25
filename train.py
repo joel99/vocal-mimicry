@@ -1,3 +1,5 @@
+import gc
+
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -220,16 +222,18 @@ def train():
         ###############
         train_dtor(model.isvoice_dtor, dtor_isvoice_optimizer,
                    dload_isvoice_real, dload_isvoice_fake,
-                   args.num_batches_dtor_isvoice)
+                   args.num_batches_dtor_isvoice, device)
         dtor_isvoice_checkpointer.step()
+        gc.collect()
 
         # Train generators here
         ################
         # (G) Update Generator
         ################
-        val_loss = train_gen(model, tform_optimizer, dload_generator,
+        val_loss = train_gen(model, tform_optimizer, dload_generator, device,
                              num_batches=args.num_batches_tform)
         tform_checkpointer.step()
+        gc.collect()
 
 if __name__ == "__main__":
     train()

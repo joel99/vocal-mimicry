@@ -573,10 +573,13 @@ class MemTransformer(nn.Module):
             self.r_emb = nn.Parameter(torch.Tensor(
                     self.n_layer, self.max_klen, self.n_head, self.d_head))
 
-    def reset_length(self, tgt_len, ext_len, mem_len):
-        self.tgt_len = tgt_len
-        self.mem_len = mem_len
-        self.ext_len = ext_len
+    def reset_length(self, tgt_len=None, ext_len=None, mem_len=None):
+        if tgt_len is not None:
+            self.tgt_len = tgt_len
+        if mem_len is not None:
+            self.mem_len = mem_len
+        if ext_len is not None:
+            self.ext_len = ext_len
 
     def init_mems(self):
         if self.mem_len > 0:
@@ -649,8 +652,7 @@ class MemTransformer(nn.Module):
                 core_out = layer(core_out, pos_emb, self.r_w_bias,
                         self.r_r_bias, dec_attn_mask=dec_attn_mask, mems=mems_i)
                 mn, sd = core_out.mean(0, True), core_out.std(0, True)
-                if sd.abs().sum() < 1e-5:
-                    sd += 1e-5
+                sd = sd + (sd < 1e-4).float() * 1e-4
                 core_out = (((core_out - mn) / sd) * style[:, :, self.d_model:]) + style[:, :, :self.d_model]
                 hids.append(core_out)
         elif self.attn_type == 1: # learnable
@@ -727,12 +729,10 @@ class MemTransformer(nn.Module):
             new_data = data.reshape(data_shape[0] * data_shape[1], data_shape[2], data_shape[3]).permute(1, 0, 2)
         else:
             new_data = data
-        self.reset_length(data_shape[2], data_shape[2], data_shape[2])
+        self.reset_length(tgt_len=data_shape[2])#, mem_len=data_shape[2], ext_len=data_shape[2])
         hidden, new_mems = self._forward(new_data, self.style2adain(style))
 
         pred_hid = hidden[-self.tgt_len:]
         pred_hid = pred_hid.permute(1, 0, 2).unsqueeze(1)
         pred_hid = data + pred_hid
-        print("Transformer output shape: {}".format(pred_hid.shape))
-
         return pred_hid
