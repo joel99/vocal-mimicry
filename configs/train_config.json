@@ -8,10 +8,11 @@
     "gpu_ids": 0,
 
     "mel_size": 80,
+    "style_size": 512,
     "dset_num_people": 100,
     "dset_num_samples": 200,
     "mel_root": "default/taco",
-    "embedder_path": <Need to set>,
+    "embedder_path": "embedding/data/pytorch_speaker_logs/run-optim_sgd-n1000000-lr0.1-wd0.0-m0.1-embeddings512-msceleb-alpha10-num_classes1211-num_features80-num_frames256/checkpoint_1.pth",
 
     "identity_mode": "norm",
 
