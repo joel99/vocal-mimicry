@@ -1,0 +1,27 @@
+{
+    "epoch_save_interval": 5,
+    "save_dir": "checkpoints/",
+    "load_dir": null,
+
+    "cpu_workers": 1,
+    "torch_seed": 0,
+    "gpu_ids": 0,
+
+    "mel_size": 80,
+    "dset_num_people": 100,
+    "dset_num_samples": 200,
+    "mel_root": "default/taco",
+    "embedder_path": <Need to set>,
+
+    "identity_mode": "norm",
+
+    "num_epochs": 20,
+
+    "lr_dtor_isvoice": 0.001,
+    "num_batches_dtor_isvoice": null,
+    "batch_size_dtor_isvoice": 16,
+
+    "lr_tform": 0.001,
+    "num_batches_tform": null,
+    "batch_size_tform": 16
+}
