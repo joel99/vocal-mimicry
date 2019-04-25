@@ -56,7 +56,9 @@ def train():
 
     group_data = parser.add_argument_group('data')
     group_data.add_argument('--mel-size', type=int,
-                            help="[DUMMY] Number of channels in the mel-gram")
+                            help="Number of channels in the mel-gram")
+    group_data.add_argument('--style-size', type=int,
+                            help="Dimensionality of style vector")
     group_data.add_argument('--dset-num-people', type=int,
                             help="If using VCTK, an integer under 150")
     group_data.add_argument('--dset-num-samples', type=int,
@@ -92,6 +94,7 @@ def train():
                 file_args[key] = cli_dict[key]
         args.__dict__ = file_args
 
+    print("CLI args are: ", args)
     with open("configs/basic.yml") as f:
         config = yaml.full_load(f)
 
@@ -133,8 +136,13 @@ def train():
     else:
         start_epoch = int(args.load_dir.split("_")[-1][:-4])
 
-    model = ProjectModel(config["transformer"], args.mel_size,
-                         identity_mode=args.identity_mode).to(device)
+    model = ProjectModel(config=config["transformer"],
+                         embedder_path=args.embedder_path,
+                         mel_size=args.mel_size,
+                         style_size=args.style_size,
+                         identity_mode=args.identity_mode,
+                         cuda=(not use_cpu))
+    model = model.to(device)
     tform_optimizer = torch.optim.Adam(model.transformer.parameters(),
                                        lr=args.lr_tform)
     tform_checkpointer = CheckpointManager(model.transformer,

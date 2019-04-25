@@ -8,6 +8,7 @@
     "gpu_ids": -1,
 
     "mel_size": 80,
+    "style_size": 512,
     "dset_num_people": 2,
     "dset_num_samples": 3,
     "mel_root": "default/taco",

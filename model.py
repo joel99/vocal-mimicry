@@ -28,7 +28,8 @@ def get_transformer(config):
     """
     return MemTransformer(config)
 
-def get_embedder_and_size(mel_size, path=None, cuda=None):
+def get_embedder_and_size(mel_size, path=None, cuda=False,
+                          embedding_size=512):
     """
     Returns a embedding model captures the sytle of a speakers voice
 
@@ -38,29 +39,34 @@ def get_embedder_and_size(mel_size, path=None, cuda=None):
     """
 
     if path != None:
-        embedding_size, num_classes, num_features, num_frames = embeddings.parse_params(path)
+        loaded_style_size, num_classes, num_features, num_frames = embeddings.parse_params(path)
         if mel_size != num_features:
-            warnings.warn("Mel Features and number of features for embedder do not match")
-        
-        
+            raise RuntimeError("Loaded embedder yields mel size of " + str(num_features)
+                               + " but mel size of " + str(mel_size) + " requested")
+        if embedding_size != loaded_style_size:
+            raise RuntimeError("Loaded embedder yields style size of " + str(loaded_style_size)
+                               + " but style size of " + str(embedding_size) + " requested")
+
         embedder = embeddings.load_embedder(
             checkpoint_path=path,
             embedding_size=embedding_size,
             num_classes=num_classes,
-            num_features=num_features
-            frame_dim=num_frames
+            num_features=num_features,
+            frame_dim=num_frames,
+            cuda=cuda
         )
 
     else:
-        warnings.warn("Bypassing loading embedder!")
-        print("No Model Found, initializing random weights")
-        embedder = embeddings.load_embedder()
+        print("No Embedder , initializing random weights")
+        embedder = embeddings.load_embedder(embedding_size=embedding_size,
+                                            num_features=mel_size,
+                                            cuda=cuda)
 
     return (embedder, embedding_size)
 
 
 class ProjectModel(torch.nn.Module):
-    def __init__(self, config, mel_size, identity_mode):
+    def __init__(self, config, embedder_path, mel_size, style_size, identity_mode, cuda):
         """
         :style_size: The size of the stylevector produced by embedder
         :mel_size: The number of frequency channels in the mel-cepstrogram
@@ -68,7 +74,10 @@ class ProjectModel(torch.nn.Module):
         super().__init__()
 
         self.mel_size = mel_size
-        self.embedder, self.style_size = get_embedder_and_size(self.mel_size)
+        self.embedder, self.style_size = get_embedder_and_size(mel_size=mel_size,
+                                                               path=embedder_path,
+                                                               embedding_size=style_size,
+                                                               cuda=cuda)
 
         config["d_model"] = self.mel_size
         config["d_style"] = self.style_size
