@@ -105,8 +105,8 @@ def collate_pad_tensors(sample_list, pad_dim=0, pad_element=0):
 
 class VCTK_Wrapper:
 
-    MAX_NUM_PEOPLE = 150
-    MAX_NUM_SAMPLES = 300
+    MAX_NUM_PEOPLE = 107
+    MAX_NUM_SAMPLES = 172
     # For whatever reason, the ID of the first person is actually 225
     STARTING_ID = 225
 
