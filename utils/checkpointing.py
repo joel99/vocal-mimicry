@@ -145,7 +145,8 @@ def load_checkpoint(checkpoint_pthpath):
     checkpoint_commit_sha = list(checkpoint_dirpath.glob(".commit-*"))
 
     if len(checkpoint_commit_sha) == 0:
-        raise UserWarning("Commit SHA was not recorded while saving checkpoints.")
+        #raise UserWarning("Commit SHA was not recorded while saving checkpoints.")
+        pass
     else:
         # verify commit sha, raise warning if it doesn't match
         commit_sha_subprocess = Popen(
