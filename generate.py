@@ -61,5 +61,5 @@ if __name__ == '__main__':
     tform_md, tform_od = load_checkpoint(args.transformer_path)
     model.transformer.load_state_dict(tform_md)
 
-    mel = generate(model, args, device).to(torch.device("cpu")).squeeze()
+    mel = generate(model, args, device).to(torch.device("cpu")).squeeze().permute(1, 0)
     torch.save(mel, Path(args.output_path, args.content_mel.stem + "_" + args.style_mel.stem + ".pt"))
