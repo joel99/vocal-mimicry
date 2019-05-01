@@ -36,30 +36,46 @@
 <p>CS7643 Final Project by Alex Le, Anish Moorthy, Arda Pekis, Joel Ye</p>
 
 <h2 id="introduction">Introduction</h2>
-<p>For our project, we attempted to perform style transfer on voices: given an audio clip from speaker A, we attempt to produce another audio clip with the same content (volume modulation, timing, etc), but which sounds like it was spoken by speaker B.</p>
+<p>
+    For our project, we attempted to perform style transfer on voices: given an audio clip from speaker A, we attempt to produce another audio clip with the same content (volume modulation, timing, etc), but which sounds like it was spoken by speaker B.
+</p>
 
-<p>Voice cloning has been a topic of interest for many years now, but up until recently many models have required an abundance of source / target training data for a single sample [1] (on the order of 5-10 hours of training data). In recent years, much progress has been made: to our knowledge, the current SOTA model is [3] which can indeed produce good results with little data. However even this model uses text as an intermediate representation, an embedding which ignores many important aspects of spoken communication such as intonation and timing.</p>
+<p>
+    Voice cloning has been a topic of interest for many years now, but up until recently many models have required an abundance of source / target training data for a single sample [1] (on the order of 5-10 hours of training data). In recent years, much progress has been made: to our knowledge, the current SOTA model is [3] which can indeed produce good results with little data. However even this model uses text as an intermediate representation, an embedding which ignores many important aspects of spoken communication such as intonation and timing.
+</p>
 
-<p>To surpass these limitations, we aimed to perform data-efficient style transfer without the use of test as an intermediate representation. Such technology would have many real-world applications, especially in the modern entertainment industry where it could be used to preserve iconic voices for use in future media. This technology could also theoretically be used to adapt an actors voice to fit the role of the film, meaning that actors may no longer need months of training to build or remove an accent. This technology could also be useful in the human interactive field for personalizing a user’s Siri, Google Assistant, Alexa or Cortana. Having a similar accent could improve the performance and usefulness of these applications.</p>
+<p>
+    To surpass these limitations, we aimed to perform data-efficient style transfer without the use of test as an intermediate representation. Such technology would have many real-world applications, especially in the modern entertainment industry where it could be used to preserve iconic voices for use in future media or to adapt an actors voice to fit the role of the film, removing the need for actors to spend months of training to building or losing accents. This technology could also be useful in the human interactive field for personalizing a user’s Siri, Google Assistant, Alexa or Cortana. Having a similar accent could improve the performance and usefulness of these applications.
+</p>
 
 <h2 id="approach">Approach</h2>
-<p>We used Pytorch as our framework. For our data-embedding, we preprocess into log-mel spectrograms, a 2d-representation of audio with time on one axis and frequency on the other. We chose this embedding for two key reasons. First, log-mel spectrograms are a standard embedding for working with audio data, and so there exist sophisticated tools for converting them back to audio: we use Nvidia’s open-source WaveGlow [2] network for this exact purpose. We verified that the existing implementation provided produces convincing reconstructions of our mel embeddings of audio clips. Second, they allow us to use (and indeed, are a natural target for) Convolutional Neural Networks throughout our architecture.</p>
+<p>
+    For our data-embedding, we preprocess into log-mel spectrograms, a 2d-representation of audio with time on one axis and frequency on the other. We chose this embedding for two key reasons. First, log-mel spectrograms are a standard embedding for working with audio data, and so there exist sophisticated tools for converting them back to audio: we use Nvidia’s open-source WaveGlow [2] network for this exact purpose. We verified that the existing implementation provided produces convincing reconstructions of our mel embeddings of audio clips. Second, they allow us to use (and indeed, are a natural target for) Convolutional Neural Networks throughout our architecture. All of our code is implemented in the Pytorch framework.
+</p>
 
 <figure>
   <img src="./assets/figures/mel-example.png" alt="Mel">
   <figcaption style="text-align: center">Example of Mel-Spectrogram [4]</figcaption>
 </figure>
 
-<p>We chose a generative model architecture, illustrated below, designed to counter anticipated problems. The Transformer Network (corresponding to the generator) attempts to, given a source audio file and target style vector, output another audio file which has low distance from the target style vector. Content similarity is enforced via the residual connection across the transformer network, which biases the transformer towards producing something similar to the input mel: the source of the content information which we wish to preserve. To prevent the model from simply producing noise which is overfit to the style embedder, we include two discriminators: one for determining whether the output sounds like a voice, and another for determining whether it is an original or transformed voice.</p>
+<p>
+    We chose a generative model architecture, illustrated below, designed to counter anticipated problems. The Transformer Network (corresponding to the generator) attempts to, given a source audio file and target style vector, output another audio file which has low distance from the target style vector. Content similarity is enforced via the residual connection across the transformer network, which biases the transformer towards producing something similar to the input mel: the source of the content information which we wish to preserve. To prevent the model from simply producing noise which is overfit to the style embedder, we include two discriminators: one for determining whether the output sounds like a voice, and another for determining whether it is an original or transformed voice.
+</p>
 
 <p><img src="assets/figures/model-arch.png" alt="Arch"></p>
 
-<p>We believed that this model was suited to our objective because it offered a clear target to be made data-efficient: the style embedder. Using small amounts of source and target data (as was our goal), it would have been difficult to train the model end-to-end from scratch. However using a large dataset such as VoxCeleb to train the Style Embedder to efficiently estimate future audio samples would make the problem easier: assuming a “reliable” style embedder, the Transformer and Discriminator networks do not have to be architected around data efficiency and can also be trained using large datasets.</p>
+<p>
+    We believed that this model was suited to our objective because it offered a clear target to be made data-efficient: the style embedder. Using small amounts of source and target data (as was our goal), it would have been difficult to train the model end-to-end from scratch. However using a large dataset such as VoxCeleb to train the Style Embedder to efficiently estimate future audio samples would make the problem easier: assuming a “reliable” style embedder, the Transformer and Discriminator networks do not have to be architected around data efficiency and can also be trained using large datasets.
+</p>
 
-<p>In summary, the style embedder and waveglow reconstruction modules exist independently, and the transformer and discriminators are the bulk of the model to be trained. &lt;TODO A note about hyperparameters @Arda&gt;</p>
+<p>
+    In summary, the style embedder and waveglow reconstruction modules exist independently, and the transformer and discriminators are the bulk of the model to be trained. (TODO A note about hyperparameters and optimizers @Arda)
+</p>
 
 <h3 id="discriminators">Discriminators</h3>
-<p>For the IsVoice? discriminator, the 2d data allows us to employ CNNs, which have been demonstrated to be suited for audio classification [5][6] [from poster, check references). The following architecture is adapted from [6] to accommodate variable time-length data</p>
+<p>
+    For the IsVoice? discriminator, the 2d data allows us to employ CNNs, which have been demonstrated to be suited for audio classification [5][6]. The following architecture is adapted from [6] to accommodate variable time-length data via the global max-pool across time.
+</p>
 
 <p><img src="assets/figures/isvoice-arch.png" alt="discriminator"></p>
 
@@ -71,9 +87,12 @@
 </p>
 <p>
 <img src="assets/eq/sout.png" alt="sout" style='height: 22px'>
-  is the style embedding of the transformer’s output. We considered a Siamese Network instead, but decided against it due to (a) potential to overfit and (b) added model parameters which would inflate complexity and training times.</p>
+is the style embedding of the transformer’s output. We considered a Siamese Network instead, but decided against it due to (a) potential to overfit and (b) added model parameters which would inflate complexity and training times.
+</p>
 
-<p>As described in Goodfellow’s original paper on GANs, both discriminators output a probability that their input belongs to the True (as opposed to Generated) distribution. We  train the IsVoice? Discriminator via minimizing the binary cross-entropy between its prediction and  the true label (either real or generated) of an input sample.</p>
+<p>
+    As described in Goodfellow’s original paper on GANs, both discriminators output a probability that their input belongs to the True (as opposed to Generated) distribution. We  train the IsVoice? Discriminator via minimizing the binary cross-entropy between its prediction and  the true label (either real or generated) of an input sample.
+</p>
 
 <p>After a batch of discriminator training, the Transformer is trained to minimize </p>
 <img style="display: block;margin:auto;" src="assets/eq/gan.png" alt="gan">
@@ -93,22 +112,49 @@
 </p>
 
 <h2 id="experiments-and-results">Experiments and Results</h2>
-<p>Vocal imitation, as a type of style transfer, is difficult to evaluate objectively. A typical strategy used for style transfer results is Mean Opinion Survey, where opinions on task success (here, whether the source style is expressed in target clip), are gathered and averaged. However, we did not gather these quantitative scores after initial assessment of our results, which clearly did not convey the target styles, meaning failure for the overall system. Examples are provided below.</p>
+<p>
+    Vocal imitation, as a type of style transfer, is difficult to evaluate objectively. A typical strategy used for style transfer results is Mean Opinion Survey, where opinions on task success are gathered and averaged. However, assessment of our results clearly showed that our model learned almost nothing, and so we did not gather these quantitative scores. Example model input/outputs are provided below.
+</p>
 
-<p>Our main experiment looked at the effects of adding a residual connection as shown in our architecture map, compared to simply having the transformer create an output mel. The samples indicate that not providing a residual connection produces non-random but meaningless noise. However, the residual connection preserved content, causing the overall mel to be distorted. We believe that this noisy distortion is fooling the SamePerson discriminator, meaning our model suffers from a combination of improper GAN tuning and insufficient training time.</p>
+<p>
+    Our main experiment looked at the effects of the residual connection across the transformer network, as shown in our architecture map. Originally, this connection was not included in the architecture: however, without the residual connection our model produced non-random but meaningless noise (omitted as it is painful to listen to). After adding and retraining with the residual connection, results improved somewhat in that the network produced distorted versions of the source input [LINK]. However, even with the residual connection we found the target style vector has little semantic effect on the output of the transformer: that is, the model was unable to learn the “style transfer” function that it was designed to.
+</p>
 
-<p>Realization of poor results indicate a few directions we could try to improve. A more rigorous assessment of each component could reveal unexpected behavior that would bring down the whole models performance. 
+<p>Realization of poor results indicate a few directions we could try to improve. A more rigorous assessment of each component could reveal unexpected behavior that would bring down the whole models performance.
 @Arda send some further insight. Include mel images.</p>
 
+
+<h2 id="analysis">Analysis</h2>
+<p>
+    Given the results above, it is highly likely that our model’s failure is attributable to a weak and/or noisy style loss signal. We have shown that our model tends to learn noisy distortions of the input clips: since the Style Embedder is trained on data which does not contain these distortions, it may not generalize well to the progressively-more distorted inputs we give it.  This would make the style loss extremely noisy, which would in turn explain our inability to learn anything meaningful. We believe that this generalization error of the style embedder has at least something to do with our results, since the DeepSpeaker architecture is based on ConvNets and numerous sources, not least our own Assignment 2 [9], have demonstrated that even small perturbations in inputs may confuse CNNs.
+</p>
+<p>
+    However even assuming that the style embedder generalized well, however, it is possible that the OriginalVoice discriminator needed more representational power than given by the simple arctan-of-norm function. In retrospect, even a simple multi-layer perceptron network might have been useful here to allow the discriminator function to capture, for example, differing importance of features in the style vectors.
+</p>
+<p>
+    At the very least, these poor results indicate further directions for modification and exploration which could yield improvement.
+</p>
+<p>
+    <ol>
+        <li>
+         The most important task would be to verify the resilience of the Style Embedder to noise: say, by adding random gaussian noise to samples and measuring the resultant perturbations in the style vectors. If this reveals resilience to be a problem, then the next step would be to retrain the Style Embedder on a noise-augmented dataset so that it can better handle the the transformer produces.
+        </li>
+        <li>
+            Furthermore, our goal was to produce realistic-sounding voices and the RealVoice discriminator could not prevent noticeable distortions in the model outputs. Given that the RealVoice architecture (illustrated above) without the global max-pool has been successfully applied to audio classification before, our max-pool probably causes the degradation simply because it throws away so much information. Replacing the max-pool with a recurrent neural network would have been a more appropriate way to synthesize information across time.
+
+        </li>
+    </ol>
+</p>
+
 <h2 id="samples">Samples</h2>
-<p>Provided below are a random selection of clips generated by our system. No residual connection results omitted (they are unpleasant to listen to!)</p>
+<p>Provided below are a random selection of clips generated by our system. No residual connection results omitted (they are painful to listen to!)</p>
 
 <h4 id="voice-reconstruction-waveglow">Voice reconstruction (WaveGlow):</h4>
 <p>
   <a href="https://joel99.github.io/vocal-mimicry/gh-pages/assets/raw/p300_001.wav">Original</a>
   <audio controls>
       <source src="https://raw.githubusercontent.com/joel99/vocal-mimicry/gh-pages/assets/raw/p300_001.wav" type="audio/wav">
-    </audio>    
+    </audio>
 </p>
 <p>
 <a href="https://raw.githubusercontent.com/joel99/vocal-mimicry/gh-pages/assets/synth_reconstruct/p300_001_synthesis.wav">Reconstructed</a>
@@ -117,6 +163,7 @@
   </audio>
 </p>
   <h4 id="residual-connection-enabled">Residual connection enabled:</h4>
+  <h5 id="example-1">Example 1</h5>
 <p>
   <a href="https://raw.githubusercontent.com/joel99/vocal-mimicry/gh-pages/assets/raw/p226_002.wav">Source Content</a>
   <audio controls>
@@ -138,6 +185,7 @@
   </audio>
 </p>
 
+<h5 id="example-1">Example 1</h5>
 <p>
   <a href="https://raw.githubusercontent.com/joel99/vocal-mimicry/gh-pages/assets/raw/p231_002.wav">Source Content</a>
   <audio controls>
@@ -177,12 +225,12 @@ Naming convention is “target_source.wav” where target is the clip’s whose 
 
 
       <footer class="site-footer">
-        
+
           <span class="site-footer-owner"><a href="https://github.com/joel99/vocal-mimicry">vocal-mimicry</a> is maintained by <a href="https://github.com/joel99">joel99</a>. Find other contributors on the GitHub.</span>
       </footer>
     </section>
 
-    
-  
+
+
 
 </body></html>

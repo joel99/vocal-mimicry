@@ -23,7 +23,7 @@ We believed that this model was suited to our objective because it offered a cle
 In summary, the style embedder and waveglow reconstruction modules exist independently, and the transformer and discriminators are the bulk of the model to be trained. <TODO A note about hyperparameters and optimizers @Arda>
 
 ### Discriminators
-For the IsVoice? discriminator, the 2d data allows us to employ CNNs, which have been demonstrated to be suited for audio classification [5][6] [from poster, check references). The following architecture is adapted from [6] to accommodate variable time-length data
+For the IsVoice? discriminator, the 2d data allows us to employ CNNs, which have been demonstrated to be suited for audio classification [5][6]. The following architecture is adapted from [6] to accommodate variable time-length data via a global max-pool across time.
 
 ![discriminator](assets/figures/isvoice-arch.png)
 
