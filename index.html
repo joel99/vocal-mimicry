@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- saved from url=(0039)https://joel99.github.io/vocal-mimicry/ -->
 <html lang="en-US"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+
 
 <!-- Begin Jekyll SEO tag v2.5.0 -->
 <title>One-Shot Vocal Imitation | Data-Efficient Voice Imitation</title>
@@ -25,10 +25,10 @@
     <section class="page-header">
       <h1 class="project-name">Data-Efficient Voice Imitation</h1>
       <h2 class="project-tagline">Investigating Vocal Style Transfer in the Few Shot Setting</h2>
-      
+
         <a href="https://github.com/joel99/vocal-mimicry" class="btn">View on GitHub</a>
-      
-      
+
+
     </section>
 
     <section class="main-content">
@@ -111,6 +111,9 @@ is the style embedding of the transformer’s output. We considered a Siamese Ne
 <img style="display: block;margin:auto;" src="assets/figures/triplet_loss.png" alt="triplet">
 </p>
 
+<p>The embedder model was forked and modified from a deeper speaker repository,</p>
+<a href="https://github.com/qqueing/DeepSpeaker-pytorch">https://github.com/qqueing/DeepSpeaker-pytorch.</a>
+
 <h3 id="transformer">Transformer</h3>
 <p>
 We adapt the transformer-xl model used in Dai et al. to handle the sequence to sequence task of transforming audio mel spectrograms rather than the original language modeling task[10]. Transformer-XL combines relative positional attention with an RNN to achieve longer term time dependencies than typical transformers as well as significantly speeding up inference, both of which are important traits for audio models.
@@ -156,7 +159,7 @@ For our transformer model, we used an inner dimension of 64, 4 16-dimensional at
 </p>
 
 <h2 id="samples">Samples</h2>
-<p> Example Generated Mel: 
+<p> Example Generated Mel:
   <img style="display: block;margin:auto;" src="assets/figures/mel_gen.png" alt="mel_gen">
 </p>
 
@@ -234,7 +237,7 @@ Naming convention is “target_source.wav” where target is the style to be mat
   <li>Ian Goodfellow et al. “Generative Adversarial Networks” (Jun 2014)</li>
   <li>Chao Li et al. “Deep Speaker: an End-to-End Neural Speaker Embedding System” (2017)</li>
   <li>Gatech CS7643 Spring 2019, “Homework 2 (Coding)”</li>
-  <li>Dai, Zihang, et al. "Transformer-xl: Attentive language models beyond a fixed-length context." arXiv preprint arXiv:1901.02860 (2019).</li> 
+  <li>Dai, Zihang, et al. "Transformer-xl: Attentive language models beyond a fixed-length context." arXiv preprint arXiv:1901.02860 (2019).</li>
   <li>Goodfellow, Ian J., Jonathon Shlens, and Christian Szegedy. "Explaining and harnessing adversarial examples." arXiv preprint arXiv:1412.6572 (2014).</li>
 </ol>
 
