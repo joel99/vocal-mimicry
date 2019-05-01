@@ -111,13 +111,25 @@ is the style embedding of the transformer’s output. We considered a Siamese Ne
 <img style="display: block;margin:auto;" src="assets/figures/triplet_loss.png" alt="triplet">
 </p>
 
+<h3 id="transformer">Transformer</h3>
+<p>
+We adapt the transformer-xl model used in Dai et al. to handle the sequence to sequence task of transforming audio mel spectrograms rather than the original language modeling task[10]. Transformer-XL combines relative positional attention with an RNN to achieve longer term time dependencies than typical transformers as well as significantly speeding up inference, both of which are important traits for audio models.
+</p>
+<p>
+<img style="display: block;margin:auto;", src="assets/figures/transformer.png" alt="transformer">
+</p>
+
 <h2 id="experiments-and-results">Experiments and Results</h2>
 <p>
     Vocal imitation, as a type of style transfer, is difficult to evaluate objectively. A typical strategy used for style transfer results is Mean Opinion Survey, where opinions on task success are gathered and averaged. However, assessment of our results clearly showed that our model learned almost nothing, and so we did not gather these quantitative scores. Example model input/outputs are provided below.
 </p>
 
 <p>
-    Our main experiment looked at the effects of the residual connection across the transformer network, as shown in our architecture map. Originally, this connection was not included in the architecture: however, without the residual connection our model produced non-random but meaningless noise (omitted as it is painful to listen to). After adding and retraining with the residual connection, results improved somewhat in that the network produced distorted versions of the source input [LINK]. However, even with the residual connection we found the target style vector has little semantic effect on the output of the transformer: that is, the model was unable to learn the “style transfer” function that it was designed to.
+For our transformer model, we used an inner dimension of 64, 4 16-dimensional attention heads per layer, a 512-dimensional style representation and 4 layers. We would have preferred using larger dimensionalities but the memory usage of the transformer model was prohibitive.
+</p>
+
+<p>
+    Our main experiment looked at the effects of the residual connection across the transformer network, as shown in our architecture map. Originally, this connection was not included in the architecture: however, without the residual connection our model produced non-random but meaningless noise (omitted as it is painful to listen to). The final validation loss, evaluated relative to the discriminators, was 1.56, which was an improvement over the initial loss of 2.93. After adding and retraining with the residual connection, results improved somewhat in that the network produced distorted versions of the source input [LINK]. The transformer’s validation loss relative to the discriminators was 3.08, initially 3.27. However, even with the residual connection we found the target style vector has little semantic effect on the output of the transformer: that is, the model was unable to learn the “style transfer” function that it was designed to.
 </p>
 
 <p>Realization of poor results indicate a few directions we could try to improve. A more rigorous assessment of each component could reveal unexpected behavior that would bring down the whole models performance.
@@ -126,10 +138,10 @@ is the style embedding of the transformer’s output. We considered a Siamese Ne
 
 <h2 id="analysis">Analysis</h2>
 <p>
-    Given the results above, it is highly likely that our model’s failure is attributable to a weak and/or noisy style loss signal. We have shown that our model tends to learn noisy distortions of the input clips: since the Style Embedder is trained on data which does not contain these distortions, it may not generalize well to the progressively-more distorted inputs we give it.  This would make the style loss extremely noisy, which would in turn explain our inability to learn anything meaningful. We believe that this generalization error of the style embedder has at least something to do with our results, since the DeepSpeaker architecture is based on ConvNets and numerous sources, not least our own Assignment 2 [9], have demonstrated that even small perturbations in inputs may confuse CNNs.
+    Given the results above, it is highly likely that our model’s failure is attributable to a weak and/or noisy style loss signal. We have shown that our model tends to learn noisy distortions of the input clips: since the Style Embedder is trained on data which does not contain these distortions, it may not generalize well to the progressively-more distorted inputs we give it.  This would make the style loss extremely noisy, which would in turn explain our inability to learn anything meaningful. The better loss of the no-residual transformer suggests that the style loss is misbehaving outside of its training data regime, thus giving erroneously low loss values. We believe that this generalization error of the style embedder has at least something to do with our results, since the DeepSpeaker architecture is based on ConvNets and numerous sources, not least our own Assignment 2 [9], have demonstrated that even small perturbations in inputs may confuse CNNs.
 </p>
 <p>
-    However even assuming that the style embedder generalized well, however, it is possible that the OriginalVoice discriminator needed more representational power than given by the simple arctan-of-norm function. In retrospect, even a simple multi-layer perceptron network might have been useful here to allow the discriminator function to capture, for example, differing importance of features in the style vectors.
+    However even assuming that the style embedder generalized well, however, it is possible that the OriginalVoice discriminator needed more representational power than given by the simple arctan-of-norm function. In retrospect, even a simple multi-layer perceptron network might have been useful here to allow the discriminator function to capture, for example, differing importance of features in the style vectors, or better enabling the network to adapt to the adversarial samples generated by the transformer.
 </p>
 <p>
     At the very least, these poor results indicate further directions for modification and exploration which could yield improvement.
@@ -137,7 +149,7 @@ is the style embedding of the transformer’s output. We considered a Siamese Ne
 <p>
     <ol>
         <li>
-         The most important task would be to verify the resilience of the Style Embedder to noise: say, by adding random gaussian noise to samples and measuring the resultant perturbations in the style vectors. If this reveals resilience to be a problem, then the next step would be to retrain the Style Embedder on a noise-augmented dataset so that it can better handle the the transformer produces.
+         The most important task would be to verify the robustness of the Style Embedder to noise: say, by adding noise to samples and measuring the resultant perturbations in the style vectors. If this is revealed to be a problem, then the next step would be to retrain the Style Embedder on a noise-augmented dataset, potentially including adversarial noise via FGSM [11], so that it can better handle the output the transformer produces.
         </li>
         <li>
             Furthermore, our goal was to produce realistic-sounding voices and the RealVoice discriminator could not prevent noticeable distortions in the model outputs. Given that the RealVoice architecture (illustrated above) without the global max-pool has been successfully applied to audio classification before, our max-pool probably causes the degradation simply because it throws away so much information. Replacing the max-pool with a recurrent neural network would have been a more appropriate way to synthesize information across time.
@@ -220,6 +232,9 @@ Naming convention is “target_source.wav” where target is the clip’s whose 
   <li>Hossein Salehghaffari. “Speaker Verification using Convolutional Neural Networks” (Mar 2018)</li>
   <li>Ian Goodfellow et al. “Generative Adversarial Networks” (Jun 2014)</li>
   <li>Chao Li et al. “Deep Speaker: an End-to-End Neural Speaker Embedding System” (2017)</li>
+  <li>Gatech CS7643 Spring 2019, “Homework 2 (Coding)”</li>
+  <li>Dai, Zihang, et al. "Transformer-xl: Attentive language models beyond a fixed-length context." arXiv preprint arXiv:1901.02860 (2019).</li> 
+  <li>Goodfellow, Ian J., Jonathon Shlens, and Christian Szegedy. "Explaining and harnessing adversarial examples." arXiv preprint arXiv:1412.6572 (2014).</li>
 </ol>
 
 
